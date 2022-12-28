@@ -1,4 +1,4 @@
-# ## Shapley Decomposition
+# Shapley Decomposition
 
 Influenced by the World Bank's Job Structure tool[^1], this package consists of a generalized module for decomposing change over time with Shapley method[^2]. Decomposition is used to understand the individual contribution of variables to the change.
 
