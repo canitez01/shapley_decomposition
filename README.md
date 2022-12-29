@@ -1,6 +1,6 @@
 # Shapley Decomposition
 
-Influenced by the World Bank's Job Structure tool[^1], this package consists of a generalized module for decomposing change over time with Shapley method[^2]. Decomposition is used to understand the individual contribution of variables to the change.
+Influenced by the World Bank's Job Structure tool[^1], this package consists of a generalized module for decomposing change over time with Shapley method (using shapley values[^2]). Decomposition is used to understand the individual contribution of variables to the change. Overall application of shapley method in poverty change decompositions see [^3]
 
 ## Notes
 
@@ -25,11 +25,11 @@ Module works with two user inputs; data and function:
 
     |  | year1 | year2 |
     | --- | ----------- | ----|
-    | y | y_value | y_value |
-    | x1 | x1_value | x1_value |
-    | x2 | x2_value | x2_value |
-    | ... | ... | ... |
-    | xn | xn_value | xn_value |
+    | **y** | y_value | y_value |
+    | **x1** | x1_value | x1_value |
+    | **x2** | x2_value | x2_value |
+    | **...** | ... | ... |
+    | **xn** | xn_value | xn_value |
 
   * If an array or a list format is preferred, note that module will convert it to a pandas dataframe format and expects y and xs in the following order. Names for xs and y is not required, when inputted as shown below, module will create the output dataframe with y,x1,x2.. as index column and 0 and 1 as name columns:
     ```
@@ -118,3 +118,4 @@ Module works with two user inputs; data and function:
 
 [^1]: https://datatopics.worldbank.org/jobsdiagnostics/jobs-tools.html
 [^2]: https://www.rand.org/content/dam/rand/pubs/papers/2021/P295.pdf
+[^3]: https://link.springer.com/article/10.1007/s10888-011-9214-z
