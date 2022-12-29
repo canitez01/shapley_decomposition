@@ -23,21 +23,21 @@ Module works with two user inputs; data and function:
 1. The structure of input data is important. Module accepts pandas dataframes, arrays or list of lists:
   * If pandas dataframe is used as input, both the dependent variable and the independent variables should be presented in the given format:
 
-  |  | year1 | year2 |
-  | --- | ----------- | ----|
-  | y | y_value | y_value |
-  | x1 | x1_value | x1_value |
-  | x2 | x2_value | x2_value |
-  | ... | ... | ... |
-  | xn | xn_value | xn_value |
+    |  | year1 | year2 |
+    | --- | ----------- | ----|
+    | y | y_value | y_value |
+    | x1 | x1_value | x1_value |
+    | x2 | x2_value | x2_value |
+    | ... | ... | ... |
+    | xn | xn_value | xn_value |
 
   * If an array or a list format is preferred, note that module will convert it to a pandas dataframe format and expects y and xs in the following order. Names for xs and y is not required, when inputted as shown below, module will create the output dataframe with y,x1,x2.. as index column and 0 and 1 as name columns:
-  ```
-  [[y_value,y_value],
-    [x1_value,x1_value],
-    [x2_value,x2_value]]
-    ...
-  ```
+    ```
+    [[y_value,y_value],
+      [x1_value,x1_value],
+      [x2_value,x2_value]]
+      ...
+    ```
 2. Identity defines the relation between xs and y. Bear in mind, due to the characteristic of shapley decomposition (and thus identities) the sum of xs' contributions should be equal to y (exact with 0.0001 freedom), therefore no place for residuals, or an input relation that fails to create the given y will not work. Function input is expected text format. It is evaluated by a custom syntax parser (as the eval() function has its security risks, a custom syntax parser which translates the function in txt format to operable python format is used). Expected format for the function input is the right hand side of the equation:
     * ```"x1+x2*(x3/x4)**x5"```
     * ```"(x1+x2)*x3+x4"```
