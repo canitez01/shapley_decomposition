@@ -1,6 +1,6 @@
 # Shapley Decomposition
 
-Influenced by the World Bank's Job Structure tool[^1], this package consists of a generalized module for decomposing change over time with Shapley method (using shapley values[^2]). Decomposition is used to understand the individual contribution of variables to the change. Overall application of shapley method in poverty change decompositions see [^3]
+Influenced by the World Bank's Job Structure tool[^1], this package consists of a generalized module for decomposing change over time with Shapley method (using shapley values[^2]). Decomposition is used to understand the individual contribution of variables to the change. For overall application of shapley method in poverty change decompositions, see [^3].
 
 ## Notes
 
@@ -38,14 +38,18 @@ Module works with two user inputs; data and function:
       [x2_value,x2_value]]
       ...
     ```
-2. Identity defines the relation between xs and y. Bear in mind, due to the characteristic of shapley decomposition (and thus identities) the sum of xs' contributions should be equal to y (exact with 0.0001 freedom), therefore no place for residuals, or an input relation that fails to create the given y will not work. Function input is expected text format. It is evaluated by a custom syntax parser (as the eval() function has its security risks, a custom syntax parser which translates the function in txt format to operable python format is used). Expected format for the function input is the right hand side of the equation:
-    * ```"x1+x2*(x3/x4)**x5"```
-    * ```"(x1+x2)*x3+x4"```
-    * ```"x1*x2**2"```
+2. Identity defines the relation between xs and y. Bear in mind, due to the characteristic of shapley decomposition (and thus identities) the sum of xs' contributions should be equal to y, i.e. exact (with plus minus 0.0001 freedom in this module due to arithmetic operations), therefore no place for residuals, or an input relation that fails to create the given y will shoot a specific error. Function input is expected in text format. It is evaluated by a custom syntax parser (as the eval() function has its security risks, a custom text to python operations translator is used). Expected format for the function input is the right hand side of the equation:
+
+    * `"x1+x2*(x3/x4)**x5"`
+    * `"(x1+x2)*x3+x4"`
+    * `"x1*x2**2"`
+
+    All arithmetic operators and paranthesis operations are usable:
+    * `"+" , "-" , "*" , "/" ("÷") , "**" ("^")`
 
 ## Examples
 
-1. As the first influence for the model was from WB's Job Structure, accordingly first example is decomposition of change in value added per capita of Turkey from 2000 to 2018 according to ```x1*x2*x3*x4``` where x1 is value added per worker, x2 is employment rate, x3 is participation rate, x4 is share of 15-64 population in total population. This is an identity.
+1. As the first influence for the model was from WB's Job Structure, accordingly first example is decomposition of change in value added per capita of Turkey from 2000 to 2018 according to `"x1*x2*x3*x4"` where x1 is value added per worker, x2 is employment rate, x3 is participation rate, x4 is share of 15-64 population in total population. This is an identity.
 
   ```python
   import pandas
