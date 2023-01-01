@@ -1,6 +1,8 @@
 # Shapley Decomposition
 
-Influenced by the World Bank's Job Structure tool[^1], this package consists of a generalized module for decomposing change over time with Shapley method (using shapley values[^2]). Decomposition is used to understand the individual contribution of variables to the change. For overall application of shapley method in poverty change decompositions, see [^3].
+This package consists of two applications of shapley values in descriptive analysis: 1) a generalized module for decomposing change over time with using shapley values[^2], initially influenced by the World Bank's Job Structure tool[^1] 2) a better known shapley_owen decomposition of R^2 (contribution of independent variables to a goodness of fit metric -R^2 in this case-) in linear regression models.
+
+Decomposition is used to understand the individual contribution of variables to the change. Within the context of the first application of shapley method in poverty change decompositions, see [^3].
 
 ## Notes
 
