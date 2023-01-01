@@ -3,18 +3,16 @@ import numpy
 from itertools import combinations
 from copy import deepcopy
 from math import factorial
-import operator
 import warnings
 from sklearn.linear_model import LinearRegression
 
-
-operators={"+": [operator.add, 0, "left"] ,
-           "-": [operator.sub, 0, "left"] ,
-           "*": [operator.mul, 1, "left"] ,
-           "/": [operator.truediv, 1, "left"],
-           "÷": [operator.truediv, 1, "left"],
-           "**": [operator.pow,2, "right"],
-           "^": [operator.pow,2, "right"],
+operators={"+": [numpy.add, 0, "left"] ,
+           "-": [numpy.subtract, 0, "left"] ,
+           "*": [numpy.multiply, 1, "left"] ,
+           "/": [numpy.divide, 1, "left"],
+           "÷": [numpy.divide, 1, "left"],
+           "**": [numpy.power,2, "right"],
+           "^": [numpy.power,2, "right"],
            "(": ["para_open",3],
            ")": ["para_close",3]}
 
