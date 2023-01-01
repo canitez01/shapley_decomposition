@@ -5,6 +5,8 @@ from copy import deepcopy
 from math import factorial
 import operator
 import warnings
+from sklearn.linear_model import LinearRegression
+
 
 operators={"+": [operator.add, 0, "left"] ,
            "-": [operator.sub, 0, "left"] ,
@@ -43,24 +45,24 @@ def shapley_set_v2(dataframe, ind_x):
     shapley_list2=[list(i) for i in shapley_list]
     return shapley_list2
 
-def shunting_yard(a2):
-    def flatten (ms2): #flattening the list of lists (of every degree) without breaking the integrity of the elements (text with multiple characters)
-        ms=deepcopy(ms2)
-        rpn_result=[]
-        while len(ms)>0:
-            for val in ms:
-                if type(val)==list:
-                    del ms[0]
-                    val.reverse()
-                    for n in val:
-                        ms.insert(0,n)
-                    break
-                else:
-                    rpn_result.append(val)
-                    del ms[0]
-                    break
-        return rpn_result
+def flatten (ms2): #flattening the list of lists (of every degree) without breaking the integrity of the elements (text with multiple characters)
+    ms=deepcopy(ms2)
+    rpn_result=[]
+    while len(ms)>0:
+        for val in ms:
+            if type(val)==list:
+                del ms[0]
+                val.reverse()
+                for n in val:
+                    ms.insert(0,n)
+                break
+            else:
+                rpn_result.append(val)
+                del ms[0]
+                break
+    return rpn_result
 
+def shunting_yard(a2):
     def operator_splitter(func,op_list):
         only_var=deepcopy(func)
         for op in op_list:
@@ -204,20 +206,26 @@ def shapley_calc_v2(dataframe,ind_x,y1,y2,sample,function):
         segments.append(mapper_v3(dataframe,segm2,function)-mapper_v3(dataframe,segm1,function))
     return segments
 
-def s_compute(sample,t1):
+def s_compute(sample, t1, owen=False):
     s_counts=[]
     for w in sample:
         counter=0
-        for d in w:
-            a=d.split("-")
-            if t1 in a[1]:
-                counter +=1
+        if owen == True: #for owen_shapley decomposition, number of variables other than
+            counter = len(w)
+        else:
+            for d in w:
+                a=d.split("-")
+                if t1 in a[1]:
+                    counter +=1
         s_counts.append(counter)
     return s_counts
 
-def weighter(m,sample,t1):
+def weighter(m,sample,t1, owen=False):
     weights=[]
-    computed_s=s_compute(sample,t1)
+    if owen ==True: # for owen_shapley decomposition
+        computed_s=s_compute(sample,t1, owen=True)
+    else:
+        computed_s=s_compute(sample,t1)
     for ss in computed_s:
         weight=(factorial(ss)*factorial(m-ss-1))/factorial(m)
         weights.append(weight)
@@ -260,3 +268,44 @@ def shapley(dataframe,function, cagr=False):
         df_fin["yearly_growth"]=[cagr_calc(dataframe.loc[dep_y, dataframe.columns[0]], dataframe.loc[dep_y,dataframe.columns[1]], (int(dataframe.columns[1])-int(dataframe.columns[0])))*n
         for n in df_fin.contribution.tolist()]
     return df_fin
+
+def shapley_owen(dataframe):
+
+    def rsquared(x, y):
+        model = LinearRegression()
+        model.fit(x, y)
+        r_squared = model.score(x, y)
+        return r_squared
+
+    if type(dataframe) != pandas.core.frame.DataFrame:
+        dataframe=frame_maker(dataframe)
+
+    #dep_y = dataframe.index[0]
+    #warnings.warn("Check the dataframe as the dependent variable(y) should be the first in position i.e at index 0")
+
+    variables=dataframe.columns.tolist()[:-1]
+    comb_var=[list(combinations(variables,n)) for n in range(1,len(variables)+1)]
+    comb_var2=flatten(comb_var)
+    comb_var3=[list(n) for n in comb_var2]
+
+    general=[]
+    for n in variables:
+        d2=deepcopy(comb_var3)
+        samp=[] #in order to take combinations with the variable included
+        for m in d2:
+            if n in m:
+                samp.append(m)
+        b_with=[rsquared(dataframe.loc[:,f], dataframe["y"]) for f in samp]
+        b_wo=[]
+        for f in samp:
+            f.remove(n) #we remove the variable itself to calc. r2 without it
+            if len(f) == 0:
+                b_wo.append(0)
+            else:
+                b_wo.append(rsquared(dataframe.loc[:,f], dataframe["y"]))
+        diff=[x-t for x,t in zip(b_with,b_wo)]
+        shapley_value=diff*weighter(len(variables),samp,n, owen=True)
+        general.append(sum(shapley_value))
+    #if sum(general)==b_with[-1]:
+    #    print("succesful decomposition")
+    return general
