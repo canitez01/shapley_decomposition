@@ -238,10 +238,14 @@ def master_v2(dataframe,dep_y,ind_x,t0,t1,function):
 def cagr_calc(start,end,dur):
     return ((((int(end)/int(start))**(1/dur)))-1)*100
 
-def frame_maker(array):
-    data=pandas.DataFrame(array,index=["x"+str(ext) if ext !=0 else "y" for ext in range(0,len(array))])
-    data.columns=[str(m) for m in data.columns.tolist()]
-    return data
+def frame_maker(array, mode=1):
+    if mode == 1:
+        data=pandas.DataFrame(array,index=["x"+str(ext) if ext !=0 else "y" for ext in range(0,len(array))])
+        data.columns=[str(m) for m in data.columns.tolist()]
+        return data
+    elif mode == 2:
+        data=pandas.DataFrame(array,columns=["x"+str(ext) if ext != len(array[0]) else "y" for ext in range(1,len(array[0])+1)])
+        return data
 
 def shapley(dataframe,function, cagr=False):
     if type(dataframe) != pandas.core.frame.DataFrame:
@@ -267,7 +271,7 @@ def shapley(dataframe,function, cagr=False):
         for n in df_fin.contribution.tolist()]
     return df_fin
 
-def shapley_owen(dataframe):
+def shapley_owen(dataframe, force=False):
 
     def rsquared(x, y):
         model = LinearRegression()
@@ -276,12 +280,17 @@ def shapley_owen(dataframe):
         return r_squared
 
     if type(dataframe) != pandas.core.frame.DataFrame:
-        dataframe=frame_maker(dataframe)
-
-    #dep_y = dataframe.index[0]
-    #warnings.warn("Check the dataframe as the dependent variable(y) should be the first in position i.e at index 0")
+        dataframe=frame_maker(dataframe, mode=2)
 
     variables=dataframe.columns.tolist()[:-1]
+
+    if len(variables) > 10 and force == False:
+        raise ValueError('Number of variables exceeds the limit. In your own discretion you can force more than 20 variables by inputting - force=True - to the function. However, beware computation may take time')
+    elif len(variables) > 10 and force == True:
+        warnings.warn("As the number of variables increase, computation time and cost increase exponentially")
+    else:
+        pass
+
     comb_var=[list(combinations(variables,n)) for n in range(1,len(variables)+1)]
     comb_var2=flatten(comb_var)
     comb_var3=[list(n) for n in comb_var2]
@@ -304,6 +313,7 @@ def shapley_owen(dataframe):
         diff=[x-t for x,t in zip(b_with,b_wo)]
         shapley_value=diff*weighter(len(variables),samp,n, owen=True)
         general.append(sum(shapley_value))
-    #if sum(general)==b_with[-1]:
-    #    print("succesful decomposition")
-    return general
+
+    df_fin=pandas.DataFrame(index=variables, columns=["contribution"])
+    df_fin["contribution"]=general
+    return df_fin
