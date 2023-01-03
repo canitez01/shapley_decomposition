@@ -20,7 +20,7 @@ def prune(dataframe, dep_y, ind_x):
     df2= dataframe[(dataframe.index != dep_y)&(dataframe.index != ind_x)]
     return df2
 
-def shapley_set_v2(dataframe, ind_x):
+def shapley_set(dataframe, ind_x):
     main_var=[]
     var_group=[]
     for m in dataframe.index.tolist():
@@ -176,7 +176,7 @@ def RPN_calc(finish_func):
             stack.append(c)
     return stack.pop()
 
-def mapper_v3(dataframe, segment, function):
+def mapper(dataframe, segment, function):
     variable_dict={}
     for count, nom in enumerate(dataframe.index.tolist()):
         if count != 0:
@@ -196,12 +196,12 @@ def mapper_v3(dataframe, segment, function):
     else:
         raise ValueError('Number of variables in function and data are not equal. Check both the input function and data.')
 
-def shapley_calc_v2(dataframe,ind_x,y1,y2,sample,function):
+def shapley_calc(dataframe,ind_x,y1,y2,sample,function):
     segments=[]
     for segm in sample:
         segm1=[ind_x+"-"+str(y1)] + segm
         segm2=[ind_x+"-"+str(y2)] + segm
-        segments.append(mapper_v3(dataframe,segm2,function)-mapper_v3(dataframe,segm1,function))
+        segments.append(mapper(dataframe,segm2,function)-mapper(dataframe,segm1,function))
     return segments
 
 def s_compute(sample, t1, owen=False):
@@ -229,10 +229,10 @@ def weighter(m,sample,t1, owen=False):
         weights.append(weight)
     return numpy.array(weights)
 
-def master_v2(dataframe,dep_y,ind_x,t0,t1,function):
+def master(dataframe,dep_y,ind_x,t0,t1,function):
     pruned=prune(dataframe,dep_y,ind_x)
-    shapley_sample=shapley_set_v2(pruned,ind_x)
-    return sum(numpy.array(shapley_calc_v2(dataframe,ind_x,t0,t1,
+    shapley_sample=shapley_set(pruned,ind_x)
+    return sum(numpy.array(shapley_calc(dataframe,ind_x,t0,t1,
                                         shapley_sample,function))*weighter(len(dataframe.index)-1,shapley_sample,t1))
 
 def cagr_calc(start,end,dur):
@@ -247,27 +247,28 @@ def frame_maker(array, mode=1):
         data=pandas.DataFrame(array,columns=["x"+str(ext) if ext != len(array[0]) else "y" for ext in range(1,len(array[0])+1)])
         return data
 
-def shapley(dataframe,function, cagr=False):
+def shapley_change(dataframe,function, cagr=False):
     if type(dataframe) != pandas.core.frame.DataFrame:
         dataframe=frame_maker(dataframe)
 
     dep_y = dataframe.index[0]
     warnings.warn("Check the dataframe as the dependent variable(y) should be the first in position i.e at index 0")
 
+    t_cols=[str(col) for col in dataframe.columns.tolist()]
+    dataframe.columns=t_cols
+
     df_fin=dataframe.copy()
     df_fin["dif"]=[x-y for x,y in zip(dataframe.loc[:,dataframe.columns[1]].tolist(),dataframe.loc[:,dataframe.columns[0]].tolist())]
-
-    df_fin["shapley"]=[master_v2(dataframe,dep_y,x, dataframe.columns[0], dataframe.columns[1],function) if x !=dep_y else df_fin.loc[dep_y,"dif"] for x in df_fin.index.tolist()]
-
+    df_fin["shapley"]=[master(dataframe,dep_y,x, dataframe.columns[0], dataframe.columns[1],function) if x !=dep_y else df_fin.loc[dep_y,"dif"] for x in df_fin.index.tolist()]
     df_fin["contribution"]=[m/df_fin.loc[dep_y,"shapley"] for m in df_fin["shapley"].tolist()]
 
     if 0.9999 < df_fin["contribution"].sum()-1 < 1.0001:
         pass
     else:
-        raise ValueError('Contribution of variables either exceeds or fail to reach 100 within +-0.0001 precision. Check both the input function and data.')
+        raise ValueError('Contribution of variables either exceeds or fail to reach 1.0 within +-0.0001 precision. Check both the input function and data.')
 
     if cagr==True:
-        df_fin["yearly_growth"]=[cagr_calc(dataframe.loc[dep_y, dataframe.columns[0]], dataframe.loc[dep_y,dataframe.columns[1]], (int(dataframe.columns[1])-int(dataframe.columns[0])))*n
+        df_fin["yearly_growth"]=[cagr_calc(dataframe.loc[dep_y, dataframe.columns[0]], dataframe.loc[dep_y,dataframe.columns[1]], (float(dataframe.columns[1])-float(dataframe.columns[0])))*n
         for n in df_fin.contribution.tolist()]
     return df_fin
 
