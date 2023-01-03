@@ -8,7 +8,7 @@ Decomposition is used to understand the individual contribution of variables to 
 
 For the first application: identities or functions with independently moving variables have independent contributions to the result as well. Therefore this module is better useful for functions or identities with dependently moving variables (though it works as well for the independent movements). However it should be noted that being able to decompose the contribution of variables doesn't mean that the results are always interpretable. Many features of variables like; scale, dependency mode, change dynamics (slow paced/fast paced, instant/lagged), etc. deserves thorough attention when interpreting their individual contribution to the change.   
 
-Both for the first and second application, the computation time increases logarithmically as the number of variables increase. For the shapley_owen an upper variable limit of 10 variables has been set in default. However in user's discretion more variables can be forced when calling the function.
+Both for the first and second application, the computation time increases logarithmically as the number of variables increase.
 
 Shapley method for decomposing consists of two main steps. First the method takes all the possible (time variant as well, for the first application) unique instances of variable combinations that define the results in a specific order. Second it weights the results of these combinatorial variable selections and compute the end result accordingly. With these two main steps we get the individual contribution of independent variables, to the change between two instances (different years, states etc.) of dependent variables.
 
@@ -22,7 +22,7 @@ pip install decomposition
 
 ## Workings
 
-`decomposition.shapley()` function works with two user inputs; data and function:
+`shapley_decomposition.shapley_change()` function works with two user inputs; data and function:
 
 1. The structure of input data is **important**. Module accepts pandas dataframes, arrays or list of lists:
   * If pandas dataframe is used as input, both the dependent variable and the independent variables should be presented in the given format (variable names as index and years as columns):
@@ -50,16 +50,20 @@ pip install decomposition
 
     All arithmetic operators and paranthesis operations are usable:
     * `"+" , "-" , "*" , "/" or "÷", "**" or "^"`
+3. If `shapey_decomposition.shapley_change(df,"your function", cagr=True)` is called, a yearly_growth (using compound annual growth rate - cagr) column will be added, which will index the decomposition to cagr of the y. Default is `cagr=False`.   
 
-`decomposition.shapley_owen()` function works with a dataframe or array input. The expected format of the dataframe or array is as follows:
+`decomposition.shapley_owen()` function works with a dataframe or array input.
+  1. The expected format for the input dataframe or array is:
 
-  |  | x1 | x2 | .. | xn | y |  
-  | --- | ----------- | ----| -- | -- | -- |
-  | **0** | x1_value | x2_value | ... | xn_value | y_value |
-  | **1** | x1_value | x2_value | ... | xn_value | y_value |
-  | **2** | x1_value | x2_value | ... | xn_value | y_value |
-  | **...** | ... | ... | ... | ... | ... |
-  | **n** | x1_value | x2_value | ... | xn_value | y_value |
+    |  | x1 | x2 | .. | xn | y |  
+    | --- | ----------- | ----| -- | -- | -- |
+    | **0** | x1_value | x2_value | ... | xn_value | y_value |
+    | **1** | x1_value | x2_value | ... | xn_value | y_value |
+    | **2** | x1_value | x2_value | ... | xn_value | y_value |
+    | **...** | ... | ... | ... | ... | ... |
+    | **n** | x1_value | x2_value | ... | xn_value | y_value |
+
+  2. As the computation time increases exponentially with the increase in number of variables. For the shapley_owen function a default upper variable limit of 10 variables has been set. However in users' own discretion more variables can be forced by calling the function as `shapley_decomposition.shapley_owen(df, force=True)`
 
 ## Examples
 
@@ -67,7 +71,7 @@ pip install decomposition
 
   ```python
   import pandas
-  import decomposition
+  import shapley_decomposition
   df=pandas.DataFrame([[8237.599210,15026.707520],[27017.637990,43770.525560],[0.935050,0.891050],[0.515090,0.57619],[0.633046,0.668674]],index=["val_ad_pc","val_ad_pw","emp_rate","part_rate","working_age"], columns=[2000,2018])
   print(df)
   ```
@@ -80,7 +84,7 @@ pip install decomposition
   | **part_rate** | 0.633046 | 0.668674 |
 
   ```python
-  decomposition.shapley(df,"x1*x2*x3*x4")
+  shapley_decomposition.shapley_change(df,"x1*x2*x3*x4")
   ```
   |  | 2000 | 2018 | dif | shapley | contribution |
   | --- | --- | --- | --- | --- | --- |
@@ -95,7 +99,7 @@ pip install decomposition
   ```python
   import numpy as np
   import pandas
-  import decomposition
+  import shapley_decomposition
 
   np.random.seed(210)
 
@@ -113,7 +117,7 @@ pip install decomposition
 
   df=pandas.DataFrame([[sk1,sk2],[mean1,mean2],[med1,med2],[std1,std2]], columns=["0","1"], index=["non_par_skew","mean","median","std"])
 
-  decomposition.shapley(df,"(x1-x2)/x3")
+  shapley_decomposition.shapley_change(df,"(x1-x2)/x3")
   ```
   |  | 0 | 1 | dif | shapley | contribution |
   | --- | --- | --- | --- | --- | --- |
@@ -127,7 +131,7 @@ pip install decomposition
   ```python
   import numpy as np
   import pandas
-  import decomposition
+  import shapley_decomposition
 
   #some random data generation
   def df_generator(val,scale): #val is # of variables, scale is the length of variables
@@ -139,7 +143,7 @@ pip install decomposition
 
   df=df_generator(8,1000) # the 8th variable is y
 
-  decomposition.shapley_owen(df)
+  shapley_decomposition.shapley_owen(df)
   ```
 
   | | contribution |
@@ -157,7 +161,7 @@ pip install decomposition
 
   df=df_generator(12,1000) # the 8th variable is y
 
-  decomposition.shapley_owen(df, force=True)
+  shapley_decomposition.shapley_owen(df, force=True)
   ```
 
 
