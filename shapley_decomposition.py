@@ -17,21 +17,42 @@ operators={"+": [numpy.add, 0, "left"] ,
            ")": ["para_close",3]}
 
 def prune(dataframe, dep_y, ind_x):
+    """
+    Prunes the input dataframe to not include the y and selected x by index filter.
+    shapley_set() uses pruned dataframe.
+    """
     df2= dataframe[(dataframe.index != dep_y)&(dataframe.index != ind_x)]
     return df2
 
-def shapley_set(dataframe, ind_x):
+def shapley_set(dataframe):
+    """
+    Create combinations of variables and time/instances in their original positions.
+
+    Uses pruned dataframe. main_var lists all x-t combinations. var_group lists
+    the list of x-t combinations seperately ([x1-t1,x1-t2],[...]) and their original
+    position. shapley_list's loop selects combinations only with xs in their
+    original position.
+
+    master() uses shapley sets created by shapley_set().
+
+    Parameters:
+        dataframe (pandas.core.frame.DataFrame) : Pruned dataframe, free off y and selected x
+
+    Returns:
+        shapley_set (list) : A list of ordered combinations of variable-instance pairs
+    """
+
     main_var=[]
     var_group=[]
-    for m in dataframe.index.tolist():
-        c=[]
-        for n in dataframe.columns.tolist():
-            c.append(m+"-"+str(n))
-            main_var.append(m+"-"+str(n))
-        var_group.append(c)
+    for xs in dataframe.index.tolist():
+        var_with_instance=[]
+        for instance in dataframe.columns.tolist():
+            var_with_instance.append(xs+"-"+str(instance))
+            main_var.append(xs+"-"+str(instance))
+        var_group.append(var_with_instance)
     comb_list=list(combinations(main_var,len(dataframe.index)))
-    shapley_list=[]
 
+    shapley_list=[]
     for combos in comb_list:
         count=0
         for i, varis in enumerate(combos):
@@ -40,53 +61,81 @@ def shapley_set(dataframe, ind_x):
         if count == len(dataframe.index):
             shapley_list.append(combos)
 
-    shapley_list2=[list(i) for i in shapley_list]
-    return shapley_list2
+    shapley_list=[list(i) for i in shapley_list]
+    return shapley_list
 
-def flatten (ms2): #flattening the list of lists (of every degree) without breaking the integrity of the elements (text with multiple characters)
-    ms=deepcopy(ms2)
-    rpn_result=[]
-    while len(ms)>0:
-        for val in ms:
-            if type(val)==list:
-                del ms[0]
-                val.reverse()
-                for n in val:
-                    ms.insert(0,n)
+def flatten (list_of_list):
+    """
+    Flattens the list of lists (of nth level) without breaking the integrity of the non-list elements.
+
+    Parameters:
+        list_of_list (list) : The list to be flattened off of sub-lists
+    Returns:
+        flatten_list (list) : Sub-list free flattened list
+    """
+    list_of_list_copy=deepcopy(list_of_list)
+    flatten_list=[]
+    while len(list_of_list_copy) > 0:
+        for element in list_of_list_copy:
+            if type(element)==list:
+                #remove the sublist, extract its elements and add them back to the main list
+                del list_of_list_copy[0]
+                element.reverse()
+                for n in element:
+                    list_of_list_copy.insert(0,n)
                 break
             else:
-                rpn_result.append(val)
-                del ms[0]
+                #remove the non-list, add it to the final list
+                flatten_list.append(element)
+                del list_of_list_copy[0]
                 break
-    return rpn_result
+    return flatten_list
 
-def shunting_yard(a2):
+def shunting_yard(function):
+    """
+    Splits input text by arithmetic operators, then parses to post-fix notation.
+
+    operator_splitter function splits text by predefined operators. Output
+    list of the split operation is parsed to post-fix notation to relieve the
+    parantheses dependencies. Dijkstra's Shunting Yard Algorithm is used for
+    the parsing.
+
+    Parameters:
+        function (str) : Input function in text format (right hand side of equation)
+    Returns:
+        [flatten(main_stack),var_count] (list) : A list containing, function in reverse polish notation (list) and count of variables (int)
+    """
     def operator_splitter(func,op_list):
         only_var=deepcopy(func)
-        for op in op_list:
+        for operator in op_list:
             if type(func)==str:
-                func=func.split(op)
-                only_var=only_var.split(op)
+                only_var=only_var.split(operator)
+                func=func.split(operator)
                 if len(func)>1:
-                    for i in range(1,len(func)):
-                        func.insert(i*2-1,op)
+                    for index in range(1,len(func)):
+                        #operators are inserted between what they splitted, thus odd indices
+                        func.insert(index*2-1,operator)
             else:
-                func=[mid.split(op) for mid in flatten(func)]
-                only_var=[mid.split(op) for mid in flatten(only_var)]
+                func=[element.split(operator) for element in flatten(func)]
+                only_var=[element.split(operator) for element in flatten(only_var)]
                 for parts in func:
                     if len(parts) > 1:
-                        for i in range(1, len(parts)):
-                            parts.insert(i*2-1,op)
-        func=[empt for empt in flatten(func) if len(empt) != 0]
-        only_var=[empt for empt in flatten(only_var) if len(empt) != 0]
+                        for index in range(1, len(parts)):
+                            #operators are inserted between what they splitted, thus odd indices
+                            parts.insert(index*2-1,operator)
 
-        for i,c in enumerate(func):
-            if c=="*" and func[i+1] == "*":
-                del func[i:i+2]
-                func.insert(i,"**")
+        #clean the residue empty lists from split operations
+        func=[element for element in flatten(func) if len(element) != 0]
+        only_var=[element for element in flatten(only_var) if len(element) != 0]
+
+        #in order not to confuse power-** with two multiplications-*
+        for index,element in enumerate(func):
+            if element=="*" and func[index+1] == "*":
+                del func[index : index+2]
+                func.insert(index,"**")
         return [func, only_var]
 
-    returning=operator_splitter(a2,operators)
+    returning=operator_splitter(function,operators)
     varis=returning[0]
 
     var_count=0
@@ -111,15 +160,19 @@ def shunting_yard(a2):
     operator_stack=[]
     for char in varis:
         if char in operators.keys():
-            if len(operator_stack)==0: #if operator stack is empty, without checking further ifs append the operator
+            if len(operator_stack)==0: #if operator stack is empty, append it
                 operator_stack.append(char)
             else:
+                # 4 conditions to check because of the paranthesis operations
                 if "(" not in operator_stack and char !="(":
-                    if operators[char][1] > operators[operator_stack[0]][1]: #if the new operator is of higher degree than the ones in the stack, we add it into the stack first position
+                    if operators[char][1] > operators[operator_stack[0]][1]:
+                        #if the new operator is of higher degree than the ones in the stack, we add it into the stack first position
                         operator_stack.insert(0,char)
 
-                    else: # if the new operator is of lower degree or equal to the ones in the stack, we pop those from the operator stack and add to the main_stack
-                        if char == "**" or char =="^": # power operator is right associative thus we add
+                    else:
+                        # if the new operator is of lower degree or equal to the ones in the stack, we pop those from the operator stack and add to the main_stack
+                        if char == "**" or char =="^":
+                            # power operator is right associative thus we add
                             operator_stack.insert(0,char)
                         else:
                             to_rem=[c for c in operator_stack if operators[char][1]<=operators[c][1]]
@@ -231,7 +284,7 @@ def weighter(m,sample,t1, owen=False):
 
 def master(dataframe,dep_y,ind_x,t0,t1,function):
     pruned=prune(dataframe,dep_y,ind_x)
-    shapley_sample=shapley_set(pruned,ind_x)
+    shapley_sample=shapley_set(pruned)
     return sum(numpy.array(shapley_calc(dataframe,ind_x,t0,t1,
                                         shapley_sample,function))*weighter(len(dataframe.index)-1,shapley_sample,t1))
 
