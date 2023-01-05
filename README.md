@@ -2,15 +2,15 @@
 
 This package consists of two applications of shapley values in descriptive analysis: 1) a generalized module for decomposing change over time with using shapley values[^1], initially influenced by the World Bank's Job Structure tool[^2] and 2) shapley_owen decomposition of R^2 (contribution of independent variables to a goodness of fit metric -R^2 in this case-) in linear regression models.
 
-Decomposition is used to understand the individual contribution of variables to the change. Within the context of the first application of shapley method in poverty change decompositions, see [^3].
+Decomposition is used to understand the individual contributions of variables to their interaction/result (or change in interaction/result). Within the context of the first application of shapley method in poverty change decompositions, see [^3].
 
 ## Notes
 
-For the first application: identities or functions with independently moving variables have independent contributions to the result as well. Therefore this module is better useful for functions or identities with dependently moving variables (though it works as well for the independent movements). However it should be noted that being able to decompose the contribution of variables doesn't mean that the results are always interpretable. Many features of variables like; scale, dependency mode, change dynamics (slow paced/fast paced, instant/lagged), etc. deserves thorough attention when interpreting their individual contribution to the change.   
+Identities or functions with independently moving variables have independent contributions to the result as well. Therefore this module is better useful for functions or identities with dependently moving variables (though it works as well for the independent movements). However it should be noted that being able to decompose the contribution of variables doesn't mean that the results are always interpretable. Many features of variables like; scale, dependency mode, change dynamics (slow paced/fast paced, instant/lagged), etc. deserves thorough attention when interpreting their individual contribution to the change or result.   
 
 Both for the first and second application, the computation time increases logarithmically as the number of variables increase.
 
-Shapley method for decomposing consists of two main steps. First the method takes all the possible (time variant as well, for the first application) unique instances of variable combinations that define the results in a specific order. Second it weights the results of these combinatorial variable selections and compute the end result accordingly. With these two main steps we get the individual contribution of independent variables, to the change between two instances (different years, states etc.) of dependent variables.
+Shapley method for decomposing consists of two main steps. First the method takes all the possible (time variant as well, for the first application) unique instances of variable combinations that define the results in a specific order. Second it weights the results of these combinatorial variable selections and compute the end result accordingly. With these two main steps we get the individual contribution of independent variables, to the change between two instances (different years, states etc.) or to the result directly.
 
 ## Installation
 
