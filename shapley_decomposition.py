@@ -1,4 +1,4 @@
-import pandas
+bool, optionalimport pandas
 import numpy
 from itertools import combinations
 from copy import deepcopy
@@ -326,7 +326,7 @@ def s_compute(sample, t1, owen=False):
     Parameters:
         sample (list) : List of pruned shapley_sample
         t1 (str) : name of the second instance or time
-        owen (kwarg) : compute s for shapley_owen or shapley_change, default false.
+        owen (bool, optional) : compute s for shapley_owen or shapley_change, default false.
 
     Returns:
         s_counts (int) : number of s
@@ -353,7 +353,7 @@ def weighter(m,sample,t1, owen=False):
         m (int) : Total number of variables
         sample (list) : List of pruned shapley_sample
         t1 (str) : name of the second instance or time
-        owen (kwarg) : compute s for shapley_owen or shapley_change, default false.
+        owen (bool, optional) : compute s for shapley_owen or shapley_change, default false.
 
     Returns:
         weights (array) : array of weights for segments
@@ -418,7 +418,7 @@ def shapley_change(dataframe,function, cagr=False):
     Parameters:
         dataframe (pandas.core.frame.DataFrame) : Inital dataframe
         function (str) : Input function in text format (right hand side of equation)
-        cagr (kwarg) : Calculate cagr results, default false.
+        cagr (bool, optional) : Calculate cagr results, default false.
 
     Returns:
         df_fin (pandas.core.frame.DataFrame) : Final output for shapley_change
@@ -457,7 +457,7 @@ def shapley_owen(dataframe, force=False):
     Parameters:
         dataframe (pandas.core.frame.DataFrame) : Inital dataframe
         function (str) : Input function in text format (right hand side of equation)
-        cagr (kwarg) : Calculate cagr results, default false.
+        cagr (bool, optional) : Calculate cagr results, default false.
 
     Returns:
         df_fin (pandas.core.frame.DataFrame) : Final output for shapley_change
