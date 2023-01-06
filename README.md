@@ -1,6 +1,6 @@
 # Shapley Decomposition
 
-This package consists of two applications of shapley values in descriptive analysis: 1) a generalized module for decomposing change over time with using shapley values[^1], initially influenced by the World Bank's Job Structure tool[^2] and 2) shapley_owen decomposition of R^2 (contribution of independent variables to a goodness of fit metric -R^2 in this case-) in linear regression models.
+This package consists of two applications of shapley values in descriptive analysis: 1) a generalized module for decomposing change over time, using shapley values[^1] (initially influenced by the World Bank's Job Structure tool[^2]) and 2) shapley_owen decomposition of R^2 (contribution of independent variables to a goodness of fit metric -R^2 in this case-) in linear regression models.
 
 Decomposition is used to understand the individual contributions of variables to their interaction/result (or change in interaction/result). Within the context of the first application of shapley method in poverty change decompositions, see [^3].
 
@@ -52,7 +52,7 @@ pip install decomposition
     * `"+" , "-" , "*" , "/" or "÷", "**" or "^"`
 3. If `shapey_decomposition.shapley_change(df,"your function", cagr=True)` is called, a yearly_growth (using compound annual growth rate - cagr) column will be added, which will index the decomposition to cagr of the y. Default is `cagr=False`.   
 
-`decomposition.shapley_owen()` function works with a dataframe or array input.
+`shapley_decomposition.shapley_owen()` function works with a dataframe or array input.
   1. The expected format for the input dataframe or array is:
 
     |  | x1 | x2 | .. | xn | y |  
