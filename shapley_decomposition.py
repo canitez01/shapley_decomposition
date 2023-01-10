@@ -1,4 +1,4 @@
-bool, optionalimport pandas
+import pandas
 import numpy
 from itertools import combinations
 from copy import deepcopy
@@ -16,79 +16,28 @@ operators={"+": [numpy.add, 0, "left"] ,
            "(": ["para_open",3],
            ")": ["para_close",3]}
 
-def prune(dataframe, dep_y, ind_x):
-    """
-    Prunes the input dataframe to not include the y and selected x by index filter.
-    shapley_set() uses pruned dataframe.
-    """
-
-    df2 = dataframe[(dataframe.index != dep_y)&(dataframe.index != ind_x)]
-    return df2
-
-def shapley_set(dataframe):
-    """
-    Create combinations of variables and time/instances in their original positions.
-
-    Uses pruned dataframe. main_var lists all x-t combinations. var_group lists
-    the list of x-t combinations seperately ([x1-t1,x1-t2],[...]) and their original
-    position. shapley_list's loop selects combinations only with xs in their
-    original position.
-
-    master() uses shapley sets created by shapley_set().
-
-    Parameters:
-        dataframe (pandas.core.frame.DataFrame) : Pruned dataframe, free off y and selected x
-
-    Returns:
-        shapley_set (list) : A list of ordered combinations of variable-instance pairs
-    """
-
-    main_var = []
-    var_group = []
-    for xs in dataframe.index.tolist():
-        var_with_instance = []
-        for instance in dataframe.columns.tolist():
-            var_with_instance.append(xs+"-"+str(instance))
-            main_var.append(xs+"-"+str(instance))
-        var_group.append(var_with_instance)
-    comb_list = list(combinations(main_var,len(dataframe.index)))
-
-    shapley_list = []
-    for combos in comb_list:
-        count = 0
-        for i, varis in enumerate(combos):
-            if varis in var_group[i]:
-                count += 1
-        if count == len(dataframe.index):
-            shapley_list.append(combos)
-
-    shapley_list = [list(i) for i in shapley_list]
-    return shapley_list
-
 def flatten (list_of_list):
     """
     Flattens the list of lists (of nth level) without breaking the integrity of the non-list elements.
 
     Parameters:
-        list_of_list (list) : The list to be flattened off of sub-lists
+        list_of_list (list): A list with any levels of sub-lists
 
     Returns:
-        flatten_list (list) : Sub-list free flattened list
+        flatten_list (list): Flattened list
     """
 
-    list_of_list_copy = deepcopy(list_of_list)
-    flatten_list = []
+    list_of_list_copy=deepcopy(list_of_list)
+    flatten_list=[]
     while len(list_of_list_copy) > 0:
         for element in list_of_list_copy:
-            if type(element) == list:
-                #remove the sublist, extract its elements and add them back to the main list
+            if type(element)==list:
                 del list_of_list_copy[0]
                 element.reverse()
                 for n in element:
                     list_of_list_copy.insert(0,n)
                 break
             else:
-                #remove the non-list, add it to the final list
                 flatten_list.append(element)
                 del list_of_list_copy[0]
                 break
@@ -229,10 +178,10 @@ def RPN_calc(finish_func):
     Reverse Polish Notation evaluater
 
     Parameters:
-        finish_func (list): List of function characters with actual values of variables (integers,floats etc.)
+        finish_func (list): The function with real parameters
 
     Returns:
-        stack.pop() (float): Final numerical value
+        stack (list): Final numerical value after operations
 
     Code credit:
     Josh Haberman
@@ -240,84 +189,15 @@ def RPN_calc(finish_func):
     """
 
     stack = []
-    for char in finish_func:
-        if char in operators.keys():
+    for c in finish_func:
+        if c in operators.keys():
             arg2 = stack.pop()
             arg1 = stack.pop()
-            result = operators[char][0](arg1, arg2)
+            result = operators[c][0](arg1, arg2)
             stack.append(result)
         else:
-            stack.append(char)
+            stack.append(c)
     return stack.pop()
-
-def mapper(dataframe, segment, function):
-    """
-    Maps actual values of variables to raw function from shunting_yard, then calculates with RPN_calc.
-
-    Bridge between input function and actual input data. Converts input data to variable-value pairs
-    in variable_dict. This dictionary provides which variable is x1, x2, etc. in given function, then
-    replaces variables with actual data. Finaly using RPN_calc calculates the result.
-
-    Parameters:
-        dataframe (pandas.core.frame.DataFrame) : pruned dataframe
-        segment (list) : List of combination of variables out of which shapley differences will be calculated
-        function (str) : Input function in text format (right hand side of equation)
-
-    Returns:
-        RPN_calc(finish_func) (float) : result of calculation
-
-    """
-
-    variable_dict = {}
-    for count, name in enumerate(dataframe.index.tolist()):
-        if count != 0:
-            variable_dict[name]=["x"+str(count)]
-    for variable_instance_couple in segment:
-        variable_dict[variable_instance_couple.split("-")[0]].append(dataframe.loc[variable_instance_couple.split("-")[0],variable_instance_couple.split("-")[1]])
-    inv_map = {value[0]: [key,value[1]] for key, value in variable_dict.items()}
-
-    if shunting_yard(function)[1] == len(inv_map.keys()):
-        raw_func = shunting_yard(function)[0]
-        finish_func = []
-        for variable in raw_func:
-            if variable in inv_map.keys():
-                finish_func.append(inv_map[variable][1])
-            else:
-                #constants and operators which are not in variable_dict
-                finish_func.append(variable)
-        return RPN_calc(finish_func)
-    else:
-        raise ValueError('Number of variables in function and data are not equal. Check both the input function and data.')
-
-def shapley_calc(dataframe,ind_x,y1,y2,sample,function):
-    """
-    Calculates differences of instance varied choosen xs with the combinations of other variables from shapley_sample.
-
-    [x1t2, x2t1, x3t1]-[x1t1, x2t1, x3t1]
-    [x1t2, x2t2, x3t1]-[x1t2, x2t2, x3t1]
-    ...
-    Suppose x1 is choosen, segm provides the variable combination list other than the chosen variable,
-    [x2t1,x3t1] etc. in the example above. The sum of weighted differences (ouput of this function: segments)
-    according to weighter() provides shapley value.
-
-    Parameters:
-        dataframe (pandas.core.frame.DataFrame) : pruned dataframe
-        ind_x (str) : choosen variable
-        y1 (str) : first instance or time
-        y2 (str) : second instance or time
-        sample (list): List of pruned shapley_sample
-        function (str) : Input function in text format (right hand side of equation)
-
-    Returns:
-        segments (list): List of difference of combinations with choosen x and its t0 and t1 instances
-    """
-
-    segments=[]
-    for segm in sample:
-        segm1=[ind_x+"-"+str(y1)] + segm
-        segm2=[ind_x+"-"+str(y2)] + segm
-        segments.append(mapper(dataframe,segm2,function)-mapper(dataframe,segm1,function))
-    return segments
 
 def s_compute(sample, t1, owen=False):
     """
@@ -326,13 +206,13 @@ def s_compute(sample, t1, owen=False):
     Parameters:
         sample (list) : List of pruned shapley_sample
         t1 (str) : name of the second instance or time
-        owen (bool, optional) : compute s for shapley_owen or shapley_change, default false.
+        owen (kwarg) : compute s for shapley_owen or shapley_change, default false.
 
     Returns:
         s_counts (int) : number of s
     """
 
-    s_counts=[]
+    s_counts = []
     for variable_set in sample:
         counter = 0
         if owen == True: #for owen_shapley decomposition, number of variables other than
@@ -353,45 +233,212 @@ def weighter(m,sample,t1, owen=False):
         m (int) : Total number of variables
         sample (list) : List of pruned shapley_sample
         t1 (str) : name of the second instance or time
-        owen (bool, optional) : compute s for shapley_owen or shapley_change, default false.
+        owen (kwarg) : compute s for shapley_owen or shapley_change, default false.
 
     Returns:
         weights (array) : array of weights for segments
     """
 
-    weights=[]
-    if owen ==True: # for owen_shapley decomposition
-        computed_s = s_compute(sample,t1, owen=True)
+    weights = []
+    if owen == True: # for owen_shapley decomposition
+        computed_s = s_compute(sample,t1, owen = True)
     else:
-        computed_s=s_compute(sample,t1)
+        computed_s = s_compute(sample,t1)
     for ss in computed_s:
-        weight=(factorial(ss)*factorial(m-ss-1))/factorial(m)
+        weight = (factorial(ss)*factorial(m-ss-1))/factorial(m)
         weights.append(weight)
     return numpy.array(weights)
 
-def master(dataframe,dep_y,ind_x,t0,t1,function):
+def shapley_change_samples(dataframe):
     """
-    Master function for calculating shapley contributions of variables.
+    Create unique combinations of variables and time/instances.
 
-    prune(), shapley_set(), shapley_calc() and weighter() functions are in interraction under master() function
+    main_var lists all x-t combinations. var_group lists
+    the list of x-t combinations seperately ([x1t1,x1t2],[...]). shapley_list's
+    loop selects combinations only with xs in their original position. Finally,
+    segments help create t2-t1 pairs for chosen independent x + other unique x
+    combinations
 
     Parameters:
-
-        dataframe (pandas.core.frame.DataFrame) : pruned dataframe
-        dep_y (str) : dependent variable or the result
-        ind_x (str) : choosen variable
-        t0 (str) : first instance or time
-        t1 (str) : second instance or time
-        function (str) : Input function in text format (right hand side of equation)
+        dataframe (pandas.core.frame.DataFrame) : Input dataframe
 
     Returns:
-        (array) : The sum of weighted differences according to weighter(), i.e. shapley values
+        change_pairs_dict (dict) : A dictionary of variable instance change pairs
     """
 
-    pruned=prune(dataframe,dep_y,ind_x)
-    shapley_sample=shapley_set(pruned)
-    return sum(numpy.array(shapley_calc(dataframe,ind_x,t0,t1,
-                                        shapley_sample,function))*weighter(len(dataframe.index)-1,shapley_sample,t1))
+    dep_y = dataframe.index.tolist()[0]
+    change_pairs_dict={}
+    for index,ind_x in enumerate(dataframe.index.tolist()[1:]):
+        pruned_dataframe = dataframe[(dataframe.index != dep_y)&(dataframe.index != ind_x)]
+
+        main_var = []
+        var_group = []
+        for xs in pruned_dataframe.index.tolist():
+            var_with_instance = []
+            for instance in pruned_dataframe.columns.tolist():
+                var_with_instance.append(xs+"-"+str(instance))
+                main_var.append(xs+"-"+str(instance))
+            var_group.append(var_with_instance)
+        comb_list = list(combinations(main_var,len(pruned_dataframe.index)))
+
+        shapley_list = []
+        for combos in comb_list:
+            count = 0
+            for i, varis in enumerate(combos):
+                if varis in var_group[i]:
+                    count += 1
+            if count == len(pruned_dataframe.index):
+                shapley_list.append(combos)
+
+        shapley_list = [list(i) for i in shapley_list]
+        name = "x"+str(index+1)
+        segments = []
+        for segm in shapley_list:
+            segm1 = [ind_x+"-"+pruned_dataframe.columns.tolist()[0]] + segm
+            segm2 = [ind_x+"-"+pruned_dataframe.columns.tolist()[1]] + segm
+            segments.append([segm2,segm1])
+        change_pairs_dict[name] = segments
+
+    return change_pairs_dict
+
+def shapley_change_calc (dataframe, function):
+    """
+    Calculates shapley values for all variables/independent xs
+
+    segm_difference() function converts input variables into a dictionary to attain
+    correct values to the input function. finish_func is the shunting_yard assessed
+    raw_func with values placed according to variable dictionary (a map between
+    dataframe and input function)
+
+    Parameters:
+        dataframe (pandas.core.frame.DataFrame) : Input dataframe
+
+    Returns:
+        calculated_shapley_for_samples (array) : Array with shapley value arrays
+        of variables
+    """
+
+    sample = shapley_change_samples(dataframe)
+    calculated_shapley_for_samples = []
+    weights = []
+
+    def segm_difference(dataframe, sample_segment, function):
+        variable_dict = {}
+        # a variable dictionary to attain positions for xs and input variables
+        for i, name in enumerate(dataframe.index.tolist()):
+            if i != 0:
+                #disregard y which should be the first input variable in input dataframe
+                variable_dict[name] = ["x"+str(i)]
+
+        for variable_instance_couple in sample_segment:
+            variable_dict[variable_instance_couple.split("-")[0]].append(dataframe.loc[variable_instance_couple.split("-")[0],variable_instance_couple.split("-")[1]])
+
+        inv_map = {value[0]: [key,value[1]] for key, value in variable_dict.items()}
+
+        if shunting_yard(function)[1] == len(inv_map.keys()):
+            raw_func = shunting_yard(function)[0]
+            finish_func = []
+            #put the values of variables in function according to the inverse of variable dictionary we created
+            for variable in raw_func:
+                if variable in inv_map.keys():
+                    finish_func.append(inv_map[variable][1])
+                else:
+                    #constants and operators which are not in variable_dict
+                    finish_func.append(variable)
+            return RPN_calc(finish_func)
+        else:
+            raise ValueError('Number of variables in function and data are not equal. Check both the input function and data.')
+
+    for variables in sample.keys():
+        raw_shapley = []
+        samples_to_weight=[pairs[0][1:] for pairs in sample[variables]]
+        # first of pairs for every pair [0] without the varible we calculate the contr. for [0][1:]
+        weights=weighter(len(dataframe.index.tolist()[1:]), samples_to_weight ,dataframe.columns.tolist()[1], owen=False)
+
+        for combs in sample[variables]:
+            raw_shapley.append(segm_difference(dataframe, combs[0], function)-segm_difference(dataframe, combs[1], function))
+
+        calculated_shapley_for_samples.append(raw_shapley*weights)
+
+    return calculated_shapley_for_samples
+
+def shapley_owen_samples(dataframe, force=False):
+    """
+    Create unique combinations of variables.
+
+    Parameters:
+        dataframe (pandas.core.frame.DataFrame) : Input dataframe
+
+        force (bool, optional): Force to calculate for more than 10 variables
+
+    Returns:
+        change_pairs_dict (dict) : A dictionary of variable instance change pairs
+    """
+
+    main_variables = dataframe.columns.tolist()[:-1]
+
+    if len(main_variables) > 10 and force == False:
+        raise ValueError('Number of variables exceeds the limit. In your own discretion you can force more than 20 variables by inputting - force=True - to the function. However, beware computation may take time')
+    elif len(main_variables) > 10 and force == True:
+        warnings.warn("As the number of variables increase, computation time and cost increase exponentially")
+    else:
+        pass
+
+    comb_var = [list(combinations(main_variables,size)) for size in range(1,len(main_variables)+1)]
+    comb_var2 = flatten(comb_var)
+    comb_var3 = [list(n) for n in comb_var2]
+
+    change_pairs_dict = {}
+
+    for variable in main_variables:
+        comb_var4 = deepcopy(comb_var3)
+        samp = []
+        # in order to take combinations with the variable in loop included
+        for segment in comb_var4:
+            if variable in segment:
+                samp.append(segment)
+            change_pairs_dict[variable] = samp
+
+    return change_pairs_dict
+
+def shapley_owen_calc(dataframe):
+    """
+    Calculates shapley values for all variables/independent xs.
+
+    Using shapley_owen_samples(), calculates differences between combinations
+    with and without choosen independent variables. Weighted differences give
+    shapley values for all variables.
+
+    Parameters:
+        dataframe (pandas.core.frame.DataFrame) : Input dataframe
+
+    Returns:
+        shapley_owen_results (array) : Array with shapley values of variables
+    """
+
+    def rsquared(x, y):
+        model = LinearRegression()
+        model.fit(x, y)
+        r_squared = model.score(x, y)
+        return r_squared
+
+    sample=shapley_owen_samples(dataframe)
+
+    shapley_owen_results=[]
+    for variables in sample.keys():
+        b_with = [rsquared(dataframe.loc[:,elements], dataframe.iloc[:,-1]) for elements in sample[variables]]
+        b_wo = []
+        for elements in sample[variables]:
+            elements.remove(variables)
+            # we remove the variable itself to calc. r2 without it
+            if len(elements) == 0:
+                b_wo.append(0)
+            else:
+                b_wo.append(rsquared(dataframe.loc[:,elements], dataframe.iloc[:,-1]))
+        diff = [x-t for x,t in zip(b_with,b_wo)]
+        shapley_value = diff*weighter(len(sample.keys()), sample[variables], variables, owen=True)
+        shapley_owen_results.append(shapley_value)
+    return shapley_owen_results
 
 def cagr_calc(start,end,dur):
     """ Calculates compound annual growth rate with start-end dates and duration between. """
@@ -409,11 +456,33 @@ def frame_maker(array, mode=1):
         data=pandas.DataFrame(array,columns=["x"+str(ext) if ext != len(array[0]) else "y" for ext in range(1,len(array[0])+1)])
         return data
 
-def shapley_change(dataframe,function, cagr=False):
+def shapley_owen (dataframe):
     """
-    Creates final output for shapley_change decomposition attribute of the module.
+    Creates final output for shapley_owen decomposition of R^2 attribute of the module.
 
-    frame_maker(), master() and cagr_calc() functions interact under shapley_change() function.
+    frame_maker() and shapley_owen_calc() functions interact under shapley_owen() function.
+
+    Parameters:
+        dataframe (pandas.core.frame.DataFrame) : Input dataframe
+
+    Returns:
+        df_fin (pandas.core.frame.DataFrame) : Final output for shapley_owen
+    """
+
+    if type(dataframe) != pandas.core.frame.DataFrame:
+        dataframe = frame_maker(dataframe, mode=2)
+
+    results=shapley_owen_calc(dataframe)
+    df_fin = pandas.DataFrame(index = dataframe.columns.tolist()[:-1], columns = ["contribution"])
+    df_fin["contribution"] = [res.sum() for res in results]
+    return df_fin
+
+
+def shapley_change(dataframe, function, cagr=False):
+    """
+    Creates final output for shapley_change decomposition.
+
+    frame_maker(), shapley_cahnge_calc() and cagr_calc() functions interact under shapley_change() function.
 
     Parameters:
         dataframe (pandas.core.frame.DataFrame) : Inital dataframe
@@ -423,87 +492,29 @@ def shapley_change(dataframe,function, cagr=False):
     Returns:
         df_fin (pandas.core.frame.DataFrame) : Final output for shapley_change
     """
-
     if type(dataframe) != pandas.core.frame.DataFrame:
-        dataframe=frame_maker(dataframe)
+        dataframe = frame_maker(dataframe)
 
     dep_y = dataframe.index[0]
     warnings.warn("Check the dataframe as the dependent variable(y) should be the first in position i.e at index 0")
 
-    t_cols=[str(col) for col in dataframe.columns.tolist()]
-    dataframe.columns=t_cols
+    t_cols = [str(col) for col in dataframe.columns.tolist()]
+    dataframe.columns = t_cols
 
     df_fin=dataframe.copy()
-    df_fin["dif"]=[x-y for x,y in zip(dataframe.loc[:,dataframe.columns[1]].tolist(),dataframe.loc[:,dataframe.columns[0]].tolist())]
-    df_fin["shapley"]=[master(dataframe,dep_y,x, dataframe.columns[0], dataframe.columns[1],function) if x !=dep_y else df_fin.loc[dep_y,"dif"] for x in df_fin.index.tolist()]
-    df_fin["contribution"]=[m/df_fin.loc[dep_y,"shapley"] for m in df_fin["shapley"].tolist()]
+
+    results = shapley_change_calc(dataframe, function)
+
+    df_fin["dif"] = [x-y for x,y in zip(dataframe.loc[:,dataframe.columns[1]].tolist(),dataframe.loc[:,dataframe.columns[0]].tolist())]
+    df_fin["shapley"] = [df_fin.iloc[0,2]]+[result.sum() for result in results]
+    df_fin["contribution"] = [m/df_fin.loc[dep_y,"shapley"] for m in df_fin["shapley"].tolist()]
 
     if 0.9999 < df_fin["contribution"].sum()-1 < 1.0001:
         pass
     else:
         raise ValueError('Contribution of variables either exceeds or fail to reach 1.0 within +-0.0001 precision. Check both the input function and data.')
 
-    if cagr==True:
+    if cagr == True:
         df_fin["yearly_growth"]=[cagr_calc(dataframe.loc[dep_y, dataframe.columns[0]], dataframe.loc[dep_y,dataframe.columns[1]], (float(dataframe.columns[1])-float(dataframe.columns[0])))*n
         for n in df_fin.contribution.tolist()]
-    return df_fin
-
-def shapley_owen(dataframe, force=False):
-    """
-    Creates final output for shapley_owen decomposition of R^2 attribute of the module.
-
-    frame_maker(), master() and cagr_calc() functions interact under shapley_change() function.
-
-    Parameters:
-        dataframe (pandas.core.frame.DataFrame) : Inital dataframe
-        function (str) : Input function in text format (right hand side of equation)
-        cagr (bool, optional) : Calculate cagr results, default false.
-
-    Returns:
-        df_fin (pandas.core.frame.DataFrame) : Final output for shapley_change
-    """
-
-    def rsquared(x, y):
-        model = LinearRegression()
-        model.fit(x, y)
-        r_squared = model.score(x, y)
-        return r_squared
-
-    if type(dataframe) != pandas.core.frame.DataFrame:
-        dataframe = frame_maker(dataframe, mode=2)
-
-    main_variables = dataframe.columns.tolist()[:-1]
-
-    if len(main_variables) > 10 and force == False:
-        raise ValueError('Number of variables exceeds the limit. In your own discretion you can force more than 20 variables by inputting - force=True - to the function. However, beware computation may take time')
-    elif len(main_variables) > 10 and force == True:
-        warnings.warn("As the number of variables increase, computation time and cost increase exponentially")
-    else:
-        pass
-
-    comb_var = [list(combinations(main_variables,size)) for size in range(1,len(main_variables)+1)]
-    comb_var2 = flatten(comb_var)
-    comb_var3 = [list(n) for n in comb_var2]
-
-    shapley_owen_calc = []
-    for variable in main_variables:
-        comb_var4 = deepcopy(comb_var3)
-        samp = [] #in order to take combinations with the variable included
-        for segment in comb_var4:
-            if variable in segment:
-                samp.append(segment)
-        b_with = [rsquared(dataframe.loc[:,elements], dataframe["y"]) for elements in samp]
-        b_wo = []
-        for elements in samp:
-            elements.remove(variable) #we remove the variable itself to calc. r2 without it
-            if len(elements) == 0:
-                b_wo.append(0)
-            else:
-                b_wo.append(rsquared(dataframe.loc[:,elements], dataframe["y"]))
-        diff = [x-t for x,t in zip(b_with,b_wo)]
-        shapley_value = diff*weighter(len(main_variables), samp, variable, owen=True)
-        shapley_owen_calc.append(sum(shapley_value))
-
-    df_fin = pandas.DataFrame(index = main_variables, columns = ["contribution"])
-    df_fin["contribution"] = shapley_owen_calc
     return df_fin
