@@ -24,7 +24,7 @@ pip install decomposition
 
 `shapley_decomposition.shapley_change()` function works with two user inputs; data and function:
 
-1. The structure of input data is **important**. Module accepts pandas dataframes, arrays or list of lists:
+1. The structure of input data is **important**. Module accepts pandas dataframes or 2d arrays:
   * If pandas dataframe is used as input, both the dependent variable and the independent variables should be presented in the given format (variable names as index and years as columns):
 
     |  | year1 | year2 |
@@ -35,7 +35,7 @@ pip install decomposition
     | **...** | ... | ... |
     | **xn** | xn_value | xn_value |
 
-  * If an array or a list format is preferred, note that module will convert it to a pandas dataframe format and expects y and xs in the following order:
+  * If an array is preferred, note that module will convert it to a pandas dataframe format and expects y and xs in the following order:
     ```
     [[y_value,y_value],
       [x1_value,x1_value],
