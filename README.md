@@ -54,7 +54,6 @@ pip install decomposition
 
 `shapley_decomposition.shapley_owen()` function works with a dataframe or array input.
   1. The expected format for the input dataframe or array is:
-
     |  | x1 | x2 | .. | xn | y |  
     | --- | ----------- | ----| -- | -- | -- |
     | **0** | x1_value | x2_value | ... | xn_value | y_value |
