@@ -59,11 +59,11 @@ pip install decomposition
 
     |  | x1 | x2 | .. | xn | y |  
     | --- | --- | --- | --- | --- | --- |
-    | **0** | x1_value | x2_value | ... | xn_value | y_value |
-    | **1** | x1_value | x2_value | ... | xn_value | y_value |
-    | **2** | x1_value | x2_value | ... | xn_value | y_value |
-    | **...** | ... | ... | ... | ... | ... |
-    | **n** | x1_value | x2_value | ... | xn_value | y_value |
+    | 0 | x1_value | x2_value | ... | xn_value | y_value |
+    | 1 | x1_value | x2_value | ... | xn_value | y_value |
+    | 2 | x1_value | x2_value | ... | xn_value | y_value |
+    | ... | ... | ... | ... | ... | ... |
+    | n | x1_value | x2_value | ... | xn_value | y_value |
 
   2. As the computation time increases exponentially with the increase in number of variables. For the shapley_owen function a default upper variable limit of 10 variables has been set. However in users' own discretion more variables can be forced by calling the function as `shapley_decomposition.shapley_owen(df, force=True)`
 
