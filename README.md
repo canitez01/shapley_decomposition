@@ -53,7 +53,7 @@ pip install decomposition
 
 3. If `shapey_decomposition.shapley_change(df,"your function", cagr=True)` is called, a yearly_growth (using compound annual growth rate - cagr) column will be added, which will index the decomposition to cagr of the y. Default is `cagr=False`.   
 
-`shapley_decomposition.shapley_owen()` function works with a dataframe or array input.
+A `shapley_decomposition.shapley_owen()` function works with a dataframe or array input.
 
   1. The expected format for the input dataframe or array is:
 
