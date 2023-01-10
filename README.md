@@ -50,10 +50,12 @@ pip install decomposition
 
     All arithmetic operators and paranthesis operations are usable:
     * `"+" , "-" , "*" , "/" or "÷", "**" or "^"`
+    
 3. If `shapey_decomposition.shapley_change(df,"your function", cagr=True)` is called, a yearly_growth (using compound annual growth rate - cagr) column will be added, which will index the decomposition to cagr of the y. Default is `cagr=False`.   
 
 `shapley_decomposition.shapley_owen()` function works with a dataframe or array input.
   1. The expected format for the input dataframe or array is:
+
     |  | x1 | x2 | .. | xn | y |  
     | --- | ----------- | ----| -- | -- | -- |
     | **0** | x1_value | x2_value | ... | xn_value | y_value |
