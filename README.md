@@ -17,7 +17,11 @@ v(i) = \sum \limits _{S \subseteq M \setminus i} \phi(s) \cdot [V(S \cup \{i\})-
 ```math
 \phi(s) = (m-1-s)! \cdot s!/m!
 ```
-where $$ i \in M $$ and M is the main set of variables and $$ m=|M|, s=|S| $$.
+where
+```math
+i \in M
+```
+where $i \in M$ and M is the main set of variables and $m=|M|, s=|S|$.
 
 Owen value follows:
 
