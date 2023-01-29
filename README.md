@@ -17,10 +17,6 @@ v(i) = \sum \limits _{S \subseteq M \setminus i} \phi(s) \cdot [V(S \cup \{i\})-
 ```math
 \phi(s) = (m-1-s)! \cdot s!/m!
 ```
-where
-```math
-i \in M
-```
 where $i \in M$ and M is the main set of variables and $m=|M|, s=|S|$.
 
 Owen value follows:
@@ -34,7 +30,7 @@ o(i) = \sum \limits _{R \subseteq N \setminus k} \sum \limits _{T \subseteq B_k 
 ```math
 \phi(t) = (b_k-1-t)! \cdot t!/b_k!
 ```
-where $i \in M $ and M is the main set of variables. N is the powerset of coalition/group set composed of i individuals.  $ Q = \bigcup_{r \in R}B_r $ and $ n=|N|, r=|R|, b_k=|B_k|, t=|T| $.
+where $i \in M$ and M is the main set of variables. N is the powerset of coalition/group set composed of i individuals.  $Q = \bigcup_{r \in R}B_r$ and $n=|N|, r=|R|, b_k=|B_k|, t=|T|$.
 
 ## Installation
 
