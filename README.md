@@ -13,7 +13,8 @@ Both for the first and second application, the computation time increases logari
 Shapley value follows:
 ```math
 v(i) = \sum \limits _{S \subseteq M \setminus i} \phi(s) \cdot [V(S \cup \{i\})-V(S)]
-
+```
+```math
 \phi(s) = (m-1-s)! \cdot s!/m!
 ```
 where $i \in M $ and M is the main set of variables and $ m=|M|, s=|S| $.
@@ -22,9 +23,11 @@ Owen value follows:
 
 ```math
 o(i) = \sum \limits _{R \subseteq N \setminus k} \sum \limits _{T \subseteq B_k \setminus i} \phi(r) \cdot \omega(t) \cdot [V(Q \cup T \cup \{i\})-V(Q \cup T)]
-
+```
+```math
 \phi(r) = (n-1-r)! \cdot r!/n!
-
+```
+```math
 \phi(t) = (b_k-1-t)! \cdot t!/b_k!
 ```
 where $i \in M $ and M is the main set of variables. N is the powerset of coalition/group set composed of i individuals.  $ Q = \bigcup_{r \in R}B_r $ and $ n=|N|, r=|R|, b_k=|B_k|, t=|T| $.
