@@ -10,13 +10,24 @@ Identities or functions with independently moving variables have independent con
 
 Both for the first and second application, the computation time increases logarithmically as the number of variables increase.
 
-Shapley method for decomposing consists of two main steps. First the method takes all the possible (time variant as well, for the first application) unique instances of variable combinations that define the results in a specific order.
+Shapley value follows:
+```math
+v(i) = \sum \limits _{S \subseteq M \setminus i} \phi(s) \cdot [V(S \cup \{i\})-V(S)]
+
+\phi(s) = (m-1-s)! \cdot s!/m!
+```
+where $i \in M $ and M is the main set of variables and $ m=|M|, s=|S| $.
+
+Owen value follows:
 
 ```math
-v(i)= \sum \limits _{S \subseteq M \setminus i} \phi(s) \cdot [V(S \cup \{i\})-V(S)]
-```
+o(i) = \sum \limits _{R \subseteq N \setminus k} \sum \limits _{T \subseteq B_k \setminus i} \phi(r) \cdot \omega(t) \cdot [V(Q \cup T \cup \{i\})-V(Q \cup T)]
 
-Second it weights the results of these combinatorial variable selections and compute the end result accordingly. With these two main steps we get the individual contribution of independent variables, to the change between two instances (different years, states etc.) or to the result directly.
+\phi(r) = (n-1-r)! \cdot r!/n!
+
+\phi(t) = (b_k-1-t)! \cdot t!/b_k!
+```
+where $i \in M $ and M is the main set of variables. N is the powerset of coalition/group set composed of i individuals.  $ Q = \bigcup_{r \in R}B_r $ and $ n=|N|, r=|R|, b_k=|B_k|, t=|T| $.
 
 ## Installation
 
