@@ -17,7 +17,7 @@ v(i) = \sum \limits _{S \subseteq M \setminus i} \phi(s) \cdot [V(S \cup \{i\})-
 ```math
 \phi(s) = (m-1-s)! \cdot s!/m!
 ```
-where $i \in M$ and M is the main set of variables and $m=|M|, s=|S|$. For shapley change decomposition, $[V(S \cup \{i_{t_1}\})-V(S\cup \{i_{t_0}\})]$ and s is the number of variables with t1 instance.  
+where $i \in M$ and M is the main set of variables and $m=|M|, s=|S|$. For shapley change decomposition, $[V(S \cup \{i_{t_1} \})-V(S\cup \{i_{t_0} \})]$ and s is the number of variables with t1 instance.  
 
 Owen value follows:
 
