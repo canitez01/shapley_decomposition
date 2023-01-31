@@ -75,13 +75,21 @@ pip install shapley_decomposition
 
   1. The expected format for the input dataframe or array is:
 
+    |  | year1 | year2 |
+    | --- | ----------- | ----|
+    | **y** | y_value | y_value |
+    | **x1** | x1_value | x1_value |
+    | **x2** | x2_value | x2_value |
+    | **...** | ... | ... |
+    | **xn** | xn_value | xn_value |
+
     |  | x1 | x2 | ... | xn | y |  
     | --- | --- | --- | --- | --- | --- |
-    | 0 | x1_value | x2_value | ... | xn_value | y_value |
-    | 1 | x1_value | x2_value | ... | xn_value | y_value |
-    | 2 | x1_value | x2_value | ... | xn_value | y_value |
-    | ... | ... | ... | ... | ... | ... |
-    | n | x1_value | x2_value | ... | xn_value | y_value |
+    | **0** | x1_value | x2_value | ... | xn_value | y_value |
+    | **1** | x1_value | x2_value | ... | xn_value | y_value |
+    | **2** | x1_value | x2_value | ... | xn_value | y_value |
+    | **...** | ... | ... | ... | ... | ... |
+    | **n** | x1_value | x2_value | ... | xn_value | y_value |
 
 
   2. `shapley_r2.owen_decomposition` expects the group/coalition structure as the second input. This input should be a list of list showing the variables grouped within coalition/group lists. For example a model of 8 variables, x1,x2,...,x8 has three groups/coalitions which are formed as group1:(x1,x2,x3), group2:(x4) and group3:(x5,x6,x7,x8). Then the second input of owen_decomposition should be `[["x1","x2","x3"],["x4"],["x5","x6","x7","x8"]]`. Even if it is a singleton like group2 which has only x4, variable name should be in a list. If every group is a singleton, then the owen values will be equal to shapley values.
