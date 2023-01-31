@@ -176,7 +176,7 @@ pip install shapley_decomposition
 
   shapley_r2.owen_decomposition(df.iloc[:,1:], groups)
   ```
-
+  
   | | owen_values | contribution | group_owen |
   | --- | --- | --- | |
   | **Length1** |	0.157523 | 0.177934 | b1 |
@@ -184,6 +184,7 @@ pip install shapley_decomposition
   | **Length3** |	0.160276 | 0.181045 | b1 |
   | **Height** |	0.141092 | 0.159374 | b2 |
   | **Width** |	0.268218 | 0.302972 | b2 |
+
 
   | | owen_values | contribution |
   | -- | -- | -- |                         
