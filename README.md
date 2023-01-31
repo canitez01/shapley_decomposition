@@ -185,10 +185,10 @@ pip install shapley_decomposition
   | **Height** |	0.141092 | 0.159374 | b2 |
   | **Width** |	0.268218 | 0.302972 | b2 |
 
-  | | owen_values | contribution|
-  | --| --| --|                         
-  | **b1** | 0.475977|0.537653|
-  | **b2** | 0.409309|0.462347|
+  | | owen_values | contribution |
+  | -- | -- | -- |                         
+  | **b1** | 0.475977 | 0.537653 |
+  | **b2** | 0.409309 | 0.462347 |
 
   ```python
   # if the species are included as categorical variables
