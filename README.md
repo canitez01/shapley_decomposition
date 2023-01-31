@@ -6,7 +6,7 @@ This package consists of two applications of shapley values in descriptive analy
 
 Identities or functions with independently moving variables have independent contributions to the result as well. Therefore this module is better useful for functions or identities with dependently moving variables (though it works as well for the independent movements). It should be noted that being able to decompose the contribution of variables doesn't mean that the results are always clearly interpretable. Many features of variables like; scale, dependency mode, change dynamics (slow paced/fast paced, instant/lagged), etc. deserves attention when interpreting their individual contribution to the change or result.   
 
-Both for the first and second application, the computation time increases exponentially as the number of variables increase. This is the result of powersets and so $ 2^{N} $ calculations.
+Both for the first and second application, the computation time increases exponentially as the number of variables increase. This is the result of powersets and so 2^n  calculations.
 
 Shapley value follows:
 ```math
