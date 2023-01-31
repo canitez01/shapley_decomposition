@@ -71,17 +71,17 @@ pip install shapley_decomposition
 
 3. If `shapley_change.decomposition(df,"your function", cagr=True)` is called, a yearly_growth (using compound annual growth rate - cagr) column will be added, which will index the decomposition to cagr of the y. Default is `cagr=False`.   
 
-`shapley_decomposition.shapley_r2` module consists of three functions as well: `samples()`, `shapley_decomposition()` and `owen_decomposition`. `shapley_r2.samples(dataframe)` returns powerset variable pairs that model uses. `shapley_r2.shapley_decomposition(dataframe)` returns the decomposition of model r^2 to the contributions of variables. `shapley_r2.owen_decomposition(dataframe, [["x1","x2"],[..]])` returns the owen decomposition of model r^2 to the contributions of variables and groups/coalitions. Input features expected by shapley_r2 functions are as:
+The `shapley_decomposition.shapley_r2` module consists of three functions as well: `samples()`, `shapley_decomposition()` and `owen_decomposition`. `shapley_r2.samples(dataframe)` returns powerset variable pairs that model uses. `shapley_r2.shapley_decomposition(dataframe)` returns the decomposition of model r^2 to the contributions of variables. `shapley_r2.owen_decomposition(dataframe, [["x1","x2"],[..]])` returns the owen decomposition of model r^2 to the contributions of variables and groups/coalitions. Input features expected by shapley_r2 functions are as:
 
   1. The expected format for the input dataframe or array is:
 
-  |  | x1 | x2 | ... | xn | y |  
-  | --- | --- | --- | --- | --- | --- |
-  | **0** | x1_value | x2_value | ... | xn_value | y_value |
-  | **1** | x1_value | x2_value | ... | xn_value | y_value |
-  | **2** | x1_value | x2_value | ... | xn_value | y_value |
-  | **...** | ... | ... | ... | ... | ... |
-  | **n** | x1_value | x2_value | ... | xn_value | y_value |
+    |  | x1 | x2 | ... | xn | y |  
+    | --- | --- | --- | --- | --- | --- |
+    | **0** | x1_value | x2_value | ... | xn_value | y_value |
+    | **1** | x1_value | x2_value | ... | xn_value | y_value |
+    | **2** | x1_value | x2_value | ... | xn_value | y_value |
+    | **...** | ... | ... | ... | ... | ... |
+    | **n** | x1_value | x2_value | ... | xn_value | y_value |
 
 
   2. `shapley_r2.owen_decomposition` expects the group/coalition structure as the second input. This input should be a list of list showing the variables grouped within coalition/group lists. For example a model of 8 variables, x1,x2,...,x8 has three groups/coalitions which are formed as group1:(x1,x2,x3), group2:(x4) and group3:(x5,x6,x7,x8). Then the second input of owen_decomposition should be `[["x1","x2","x3"],["x4"],["x5","x6","x7","x8"]]`. Even if it is a singleton like group2 which has only x4, variable name should be in a list. If every group is a singleton, then the owen values will be equal to shapley values.
