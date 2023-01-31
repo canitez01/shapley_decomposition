@@ -80,9 +80,7 @@ pip install shapley_decomposition
     | 0 | x1_value | x2_value | ... | xn_value | y_value |
     | 1 | x1_value | x2_value | ... | xn_value | y_value |
     | 2 | x1_value | x2_value | ... | xn_value | y_value |
-    | ... | ... | ... | ... | ... | ... |
     | n | x1_value | x2_value | ... | xn_value | y_value |
-
 
   2. `shapley_r2.owen_decomposition` expects the group/coalition structure as the second input. This input should be a list of list showing the variables grouped within coalition/group lists. For example a model of 8 variables, x1,x2,...,x8 has three groups/coalitions which are formed as group1:(x1,x2,x3), group2:(x4) and group3:(x5,x6,x7,x8). Then the second input of owen_decomposition should be `[["x1","x2","x3"],["x4"],["x5","x6","x7","x8"]]`. Even if it is a singleton like group2 which has only x4, variable name should be in a list. If every group is a singleton, then the owen values will be equal to shapley values.
 
@@ -176,9 +174,9 @@ pip install shapley_decomposition
 
   shapley_r2.owen_decomposition(df.iloc[:,1:], groups)
   ```
-  
+
   | | owen_values | contribution | group_owen |
-  | --- | --- | --- | |
+  | --- | --- | --- | --- |
   | **Length1** |	0.157523 | 0.177934 | b1 |
   | **Length2** |	0.158178 | 0.178674 | b1 |
   | **Length3** |	0.160276 | 0.181045 | b1 |
