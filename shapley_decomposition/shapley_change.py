@@ -22,7 +22,9 @@ def samples(dataframe):
         change_pairs_dict (dict) : A dictionary of variable instance change pairs
     """
 
-    dep_y = dataframe.index.tolist()[0]
+    dataframe = frame_maker(dataframe)
+    dep_y = dataframe.index[0]
+
     change_pairs_dict={}
     for index,ind_x in enumerate(dataframe.index.tolist()[1:]):
         pruned_dataframe = dataframe[(dataframe.index != dep_y)&(dataframe.index != ind_x)]
@@ -73,7 +75,7 @@ def shapley_values (dataframe, function):
         calculated_shapley_for_samples (array) : Array with shapley value arrays
         of variables
     """
-
+    dataframe = frame_maker(dataframe)
     sample = samples(dataframe)
     calculated_shapley_for_samples = []
     weights = []
@@ -137,17 +139,12 @@ def decomposition(dataframe, function, cagr=False):
     Returns:
         df_fin (pandas.core.frame.DataFrame) : Final output for shapley_change
     """
-    if type(dataframe) != pandas.core.frame.DataFrame:
-        dataframe = frame_maker(dataframe)
 
+    dataframe = frame_maker(dataframe)
     dep_y = dataframe.index[0]
     warnings.warn("Check the dataframe as the dependent variable(y) should be the first in position i.e at index 0")
 
-    t_cols = [str(col) for col in dataframe.columns.tolist()]
-    dataframe.columns = t_cols
-
     df_fin=dataframe.copy()
-
     results = shapley_values(dataframe, function)
 
     df_fin["dif"] = [x-y for x,y in zip(dataframe.loc[:,dataframe.columns[1]].tolist(),dataframe.loc[:,dataframe.columns[0]].tolist())]
