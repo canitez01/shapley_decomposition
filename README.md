@@ -9,6 +9,7 @@ Identities or functions with independently moving variables have independent con
 Both for the first and second application, the computation time increases exponentially as the number of variables increase. This is the result of powersets and so 2^n  calculations.
 
 Shapley value follows:
+
 $v(i) = \sum \limits _{S \subseteq M \setminus i} \phi(s) \cdot [V(S \cup \{i\})-V(S)]$
 
 $\phi(s) = (m-1-s)! \cdot s!/m!$
