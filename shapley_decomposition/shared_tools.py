@@ -276,12 +276,20 @@ def frame_maker(array, mode=1):
     """ Converts arrays or list of lists as inputs to pandas dataframe. Seperate modes for shapley_change(1) and shapley_owen(2)"""
 
     if mode == 1:
-        data=pandas.DataFrame(array,index=["x"+str(ext) if ext !=0 else "y" for ext in range(0,len(array))])
-        data.columns=[str(m) for m in data.columns.tolist()]
-        return data
+        if type(array) != pandas.core.frame.DataFrame:
+            data=pandas.DataFrame(array,index=["x"+str(ext) if ext !=0 else "y" for ext in range(0,len(array))])
+            data.columns=[str(m) for m in data.columns.tolist()]
+            return data
+        else:
+            t_cols = [str(col) for col in array.columns.tolist()]
+            array.columns = t_cols
+            return array
     elif mode == 2:
-        data=pandas.DataFrame(array,columns=["x"+str(ext) if ext != len(array[0]) else "y" for ext in range(1,len(array[0])+1)])
-        return data
+        if type(array) != pandas.core.frame.DataFrame:
+            data=pandas.DataFrame(array,columns=["x"+str(ext) if ext != len(array[0]) else "y" for ext in range(1,len(array[0])+1)])
+            return data
+        else:
+            return array
 
 def rsquared(x, y):
     """Calculates r_squared for x,y pair"""
