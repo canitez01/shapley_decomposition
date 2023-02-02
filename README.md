@@ -8,7 +8,7 @@ Identities or functions with independently moving variables have independent con
 
 Both for the first and second application, the computation time increases exponentially as the number of variables increase. This is the result of powersets and so 2^n  calculations.
 
-Shapley value follows:
+Shapley value:
 
 $v(i) = \sum \limits _{S \subseteq M \setminus i} \phi(s) \cdot [V(S \cup \{i\})-V(S)]$
 
@@ -16,7 +16,7 @@ $\phi(s) = (m-1-s)! \cdot s!/m!$
 
 where $i \in M$ and M is the main set of variables and $m=|M|, s=|S|$. For shapley change decomposition, $[V(S \cup \{i_{t_1} \})-V(S\cup \{i_{t_0} \})]$ and s is the number of variables with $t_1$ instance.  
 
-Owen value follows:
+Owen value:
 
 $o(i) = \sum \limits _{R \subseteq N \setminus k} \sum \limits _{T \subseteq B_k \setminus i} \phi(r) \cdot \omega(t) \cdot [V(Q \cup T \cup \{i\})-V(Q \cup T)]$
 
