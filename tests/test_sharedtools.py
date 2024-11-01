@@ -11,8 +11,9 @@ def test_shuntingyard():
     shunted = shared_tools.shunting_yard(func)
     assert shunted[1] == 4
     assert len(shunted[0])-4 == 7
+    assert shunted[2] == [0,2,5,6]
 
 def test_rpncalc():
     func = [0.1,42,14,"+","*",31,"+"]
-    rpn = shared_tools.RPN_calc(func)
+    rpn = shared_tools.rpn_calc(func)
     assert rpn == 36.6

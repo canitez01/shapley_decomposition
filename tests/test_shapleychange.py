@@ -13,8 +13,8 @@ def test_sample_generation_and_input_variablility():
         df.columns=cols
         df.index=ind
         sample = shapley_change.samples(df)
-        assert type(sample) == dict
-        assert len(sample) > 0
+        assert type(sample[0]) == dict
+        assert len(sample[0]) > 0
 
 def test_wrong_input_function(df):
     with pytest.raises(ValueError):
@@ -29,3 +29,9 @@ def test_change_decomposition(df):
     change_decomp = shapley_change.decomposition(df,"x1*x2*x3*x4")
     assert type(change_decomp) == type(df)
     assert 0.9999 < change_decomp["contribution"][1:].sum() < 1.0001
+
+def test_change_decomposition_longData_withNoChangeVariables():
+    df2=pandas.read_csv("tests/long_sample.csv", index_col=0)
+    change_decomp_longData_withNoChangeVariables = shapley_change.decomposition(df2,"x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15+x16")
+    assert type(change_decomp_longData_withNoChangeVariables) == type(df2)
+    assert 0.9999 < change_decomp_longData_withNoChangeVariables["contribution"][1:].sum() < 1.0001
