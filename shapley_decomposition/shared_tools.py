@@ -1,18 +1,17 @@
 import pandas
-import numpy
 from itertools import chain, combinations
-from copy import deepcopy
 from math import factorial
+import operator
 import warnings
 from sklearn.linear_model import LinearRegression
 
-operators={"+": [numpy.add, 0, "left"],
-           "-": [numpy.subtract, 0, "left"],
-           "*": [numpy.multiply, 1, "left"],
-           "/": [numpy.divide, 1, "left"],
-           "÷": [numpy.divide, 1, "left"],
-           "**": [numpy.power,2, "right"],
-           "^": [numpy.power,2, "right"],
+operators={"+": [operator.add, 0, "left"],
+           "-": [operator.sub, 0, "left"],
+           "*": [operator.mul, 1, "left"],
+           "/": [operator.truediv, 1, "left"],
+           "÷": [operator.truediv, 1, "left"],
+           "**": [operator.pow,2, "right"],
+           "^": [operator.pow,2, "right"],
            "(": ["para_open",3],
            ")": ["para_close",3]}
 
@@ -24,32 +23,60 @@ def weighter_r2 (x,y):
     """Shapley weights for r2 module"""
     return factorial(x)*factorial(y-x-1)/factorial(y)
 
-def flatten (list_of_list):
+def flatten(list_of_list, preserve_nest=True):
     """
-    Flattens the list of lists (of nth level) without breaking the integrity of the non-list elements.
+    Flattens the list of lists (of nth level) without breaking the integrity of
+    the non-list elements. preserve_nest boolean variable is True if the input
+    variable (nested list) is to be unaltered after the execution of flatten. if
+    preserve_nest is false, after the execution, input variable nested list
+    become an empty list, unpreserved with its original content. This option
+    provides a slight improvement in speed performance.
 
     Parameters:
+    ----------
         list_of_list (list): A list with any levels of sub-lists
 
     Returns:
+    ----------
         flatten_list (list): Flattened list
+
+    Notes:
+    ----------
+        .. versionchanged:: 0.0.2
     """
 
-    list_of_list_copy=deepcopy(list_of_list)
-    flatten_list=[]
-    while len(list_of_list_copy) > 0:
-        for element in list_of_list_copy:
-            if type(element)==list:
-                del list_of_list_copy[0]
-                element.reverse()
-                for n in element:
-                    list_of_list_copy.insert(0,n)
-                break
-            else:
-                flatten_list.append(element)
-                del list_of_list_copy[0]
-                break
-    return flatten_list
+    if preserve_nest == True:
+        list_of_list_copy=list_of_list[:]
+        flatten_list=[]
+        while len(list_of_list_copy) > 0:
+            for element in list_of_list_copy:
+                if isinstance(element, list):
+                    del list_of_list_copy[0]
+                    element.reverse()
+                    for n in element:
+                        list_of_list_copy.insert(0,n)
+                    element.reverse()
+                    break
+                else:
+                    flatten_list.append(element)
+                    del list_of_list_copy[0]
+                    break
+        return flatten_list
+    else:
+        flatten_list=[]
+        while len(list_of_list) > 0:
+            for element in list_of_list:
+                if isinstance(element, list):
+                    del list_of_list[0]
+                    element.reverse()
+                    for n in element:
+                        list_of_list.insert(0,n)
+                    break
+                else:
+                    flatten_list.append(element)
+                    del list_of_list[0]
+                    break
+        return flatten_list
 
 def shunting_yard(input_function):
     """
@@ -61,16 +88,23 @@ def shunting_yard(input_function):
     the parsing.
 
     Parameters:
+    ----------
         function (str) : Input function in text format (right hand side of equation)
 
     Returns:
-        [flatten(main_stack),var_count] (list) : A list containing, function in reverse polish notation (list) and count of variables (int)
+    ----------
+        [flatten(main_stack),var_count] (list) : A list containing, function in
+        reverse polish notation (list) and count of variables (int)
+
+    Notes:
+    ----------
+        .. versionchanged:: 0.0.2
     """
 
     def operator_splitter(func,op_list):
-        only_var = deepcopy(func)
+        only_var = func[:]
         for operator in op_list:
-            if type(func) == str:
+            if isinstance(func, str):
                 only_var = only_var.split(operator)
                 func = func.split(operator)
                 if len(func) > 1:
@@ -78,8 +112,8 @@ def shunting_yard(input_function):
                         #operators are inserted between what they splitted, thus odd indices
                         func.insert(index*2-1,operator)
             else:
-                func = [element.split(operator) for element in flatten(func)]
-                only_var = [element.split(operator) for element in flatten(only_var)]
+                func = [element.split(operator) for element in flatten(func, preserve_nest=False)]
+                only_var = [element.split(operator) for element in flatten(only_var, preserve_nest=False)]
                 for parts in func:
                     if len(parts) > 1:
                         for index in range(1, len(parts)):
@@ -87,8 +121,8 @@ def shunting_yard(input_function):
                             parts.insert(index*2-1,operator)
 
         #clean the left-over empty lists from split operations
-        func = [element for element in flatten(func) if len(element) != 0]
-        only_var = [element for element in flatten(only_var) if len(element) != 0]
+        func = [element for element in flatten(func, preserve_nest=False) if len(element) != 0]
+        only_var = [element for element in flatten(only_var, preserve_nest=False) if len(element) != 0]
 
         #in order not to confuse power-** with two multiplications-*
         for index,element in enumerate(func):
@@ -110,6 +144,7 @@ def shunting_yard(input_function):
     splitted_function = returning[0]
 
     var_count = 0
+    real_variables=[]
     for variable in returning[1]:
         #Don't count if it is a constant
         try:
@@ -130,6 +165,7 @@ def shunting_yard(input_function):
 
     main_stack = []
     operator_stack = []
+    real_variable_pos = []
     for char in splitted_function:
         if char in operators.keys():
             if len(operator_stack) == 0:
@@ -139,12 +175,12 @@ def shunting_yard(input_function):
                 # 4 conditions to check due to paranthesis operations
                 if "(" not in operator_stack and char != "(":
                     if operators[char][1] > operators[operator_stack[0]][1]:
-                        # if the new operator is of higher degree than the ones in the stack, we add it into the stack first position
+                        # if the new operator is of higher degree than the ones in the stack, add it into the stack first position
                         operator_stack.insert(0,char)
                     else:
-                        # if the new operator is of lower degree or equal to the ones in the stack, we remove those from the operator stack and add to the main_stack
+                        # if the new operator is of lower degree or equal to the ones in the stack, remove those from the operator stack and add to the main_stack
                         if char == "**" or char == "^":
-                            # power operator is right associative thus we add
+                            # power operator is right associative thus add
                             operator_stack.insert(0,char)
                         else:
                             to_rem = [c for c in operator_stack if operators[char][1] <= operators[c][1]]
@@ -181,91 +217,43 @@ def shunting_yard(input_function):
                     operator_stack.insert(0,char)
         else:
             try:
-                if type(float(char)) == float:
+                if isinstance(float(char),float):
                     main_stack.append(float(char))
             except:
                 main_stack.append(char)
+                real_variable_pos.append(len(flatten(main_stack))-1)
+
     for remaining_operators in operator_stack:
         main_stack.append(remaining_operators)
 
-    return [flatten(main_stack),var_count]
+    return [flatten(main_stack, preserve_nest=False), var_count, real_variable_pos]
 
-def RPN_calc(finish_func):
+def rpn_calc(finish_func):
     """
     Reverse Polish Notation evaluater
 
     Parameters:
+    ----------
         finish_func (list): The function with real parameters
 
     Returns:
-        stack (list): Final numerical value after operations
+    ----------
+        operation_stack[0] (float/int): Final numerical value after operations
 
-    Code credit:
-    Josh Haberman
-    https://blog.reverberate.org/2013/07/ll-and-lr-parsing-demystified.html
+    Notes:
+    ----------
+        .. versionchanged:: 0.0.2
     """
 
-    stack = []
-    for c in finish_func:
-        if c in operators.keys():
-            arg2 = stack.pop()
-            arg1 = stack.pop()
-            result = operators[c][0](arg1, arg2)
-            stack.append(result)
+    operation_stack=[]
+    for char in finish_func:
+        if char in operators.keys():
+            result = operators[char][0](operation_stack[-2], operation_stack[-1])
+            del operation_stack[-2:]
+            operation_stack.append(result)
         else:
-            stack.append(c)
-    return stack.pop()
-
-def s_compute(sample, t1, owen=False):
-    """
-    Counts number of variables other than choosen variable for shapley_owen and other than second instance, t1, for shapley_change.
-
-    Parameters:
-        sample (list) : List of pruned shapley_sample
-        t1 (str) : name of the second instance or time
-        owen (kwarg) : compute s for shapley_owen or shapley_change, default false.
-
-    Returns:
-        s_counts (int) : number of s
-    """
-
-    s_counts = []
-    for variable_set in sample:
-        counter = 0
-        if owen == True: #for owen_shapley decomposition, number of variables other than
-            counter = len(variable_set)
-        else:
-            for variable_instance_couple in variable_set:
-                variable_instance_list = variable_instance_couple.split("-")
-                if t1 in variable_instance_list[1]:
-                    counter +=1
-        s_counts.append(counter)
-    return s_counts
-
-def weighter(m,sample,t1, owen=False):
-    """
-    Calculates weights for combinations/segments.
-
-    Parameters:
-        m (int) : Total number of variables
-        sample (list) : List of pruned shapley_sample
-        t1 (str) : name of the second instance or time
-        owen (kwarg) : compute s for shapley_owen or shapley_change, default false.
-
-    Returns:
-        weights (array) : array of weights for segments
-    """
-
-    weights = []
-    if owen == True: # for owen_shapley decomposition
-        computed_s = s_compute(sample,t1, owen = True)
-    else:
-        computed_s = s_compute(sample,t1)
-    for ss in computed_s:
-        weight = (factorial(ss)*factorial(m-ss-1))/factorial(m)
-        weights.append(weight)
-    return numpy.array(weights)
-
+            operation_stack.append(char)
+    return operation_stack[0]
 
 def cagr_calc(start,end,dur):
     """ Calculates compound annual growth rate with start-end dates and duration between. """
@@ -290,6 +278,33 @@ def frame_maker(array, mode=1):
             return data
         else:
             return array
+
+def s_sequence(k):
+    """s parameter in weight component follows the A000120 from The On-line
+    Encyclopedia of Integer Solutions (oeis.org) due to cartesian product
+    implementation for variables in samples function (variables with 2 instances)
+    thus s_sequence is its generation function.
+
+    Parameters:
+    ----------
+        k (int): input to 2**k, number of variables - 1
+
+    Returns:
+    ----------
+        seq (list): Value of s in cartesian product
+
+    Notes:
+    ----------
+        .. versionadded:: 0.0.2
+    """
+
+    seq=[0]
+    m=0
+    while m != k:
+        seq=seq[:2**m]+[n+1 for n in seq[:2**m]]
+        m+=1
+    yield from seq
+
 
 def rsquared(x, y):
     """Calculates r_squared for x,y pair"""

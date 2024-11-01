@@ -1,154 +1,180 @@
 import pandas
 import numpy
-from itertools import combinations
+from itertools import product
 from copy import deepcopy
+from math import factorial
 import warnings
-from shapley_decomposition.shared_tools import weighter, flatten, shunting_yard, RPN_calc, frame_maker, s_compute, cagr_calc
+from shapley_decomposition.shared_tools import flatten, shunting_yard, rpn_calc, frame_maker, cagr_calc, s_sequence
 
 def samples(dataframe):
     """
-    Create unique combinations of variables and time/instances.
+    Create cartesian products of n ordered pairs of the variable-instance
+    couples (without omitted-variables). Ordered pairs are the values of
+    [xn-t1, xn-t2], i.e. first and second instances of a variable. As cartesian
+    product is equivalent to nested for-loop of n degrees, it creates a
+    consistent order which is utilized with weight_computes and s_sequence
+    function. For each element of cartesian product, add the first and second
+    instances of the omitted variable to its original index in two seperate
+    lists.
 
-    main_var lists all x-t combinations. var_group lists
-    the list of x-t combinations seperately ([x1t1,x1t2],[...]). shapley_list's
-    loop selects combinations only with xs in their original position. Finally,
-    segments help create t2-t1 pairs for chosen independent x + other unique x
-    combinations
+    Create ordered weights list for an element of the cartesian product of a
+    variable (omitted) which applies same for the rest.
 
     Parameters:
+    ----------
         dataframe (pandas.core.frame.DataFrame) : Input dataframe
 
     Returns:
-        change_pairs_dict (dict) : A dictionary of variable instance change pairs
-    """
+    ----------
+        [change_pairs_dict, weight_computes] (list) :
 
+            change_pairs_dict (dictionary): keys for variables, values for nested
+            list of each cartesian product
+
+            .. versionchanged:: 0.0.2
+
+            weight_computes (list): List of computed weights of samples
+
+            .. versionadded:: 0.0.2
+
+    Notes:
+    ----------
+        .. versionchanged:: 0.0.2
+    """
     dataframe = frame_maker(dataframe)
     dep_y = dataframe.index[0]
 
-    change_pairs_dict={}
-    for index,ind_x in enumerate(dataframe.index.tolist()[1:]):
+    instance0 = dataframe.columns.tolist()[0]
+    instance1 = dataframe.columns.tolist()[1]
+    change_pairs_dict = {}
+    weight_computes = [(factorial(s_count)*factorial(len(dataframe[1:])-s_count-1))/factorial(len(dataframe[1:])) for s_count in s_sequence(len(dataframe[1:])-1)]
+
+    for pos, ind_x in enumerate(dataframe.index.tolist()[1:]):
         pruned_dataframe = dataframe[(dataframe.index != dep_y)&(dataframe.index != ind_x)]
+        second_instance_list = pruned_dataframe.iloc[:,1].tolist()
+        ommitted_ins0 = dataframe.loc[ind_x, instance0]
+        ommitted_ins1 = dataframe.loc[ind_x, instance1]
 
-        main_var = []
-        var_group = []
-        for xs in pruned_dataframe.index.tolist():
-            var_with_instance = []
-            for instance in pruned_dataframe.columns.tolist():
-                var_with_instance.append(xs+"-"+str(instance))
-                main_var.append(xs+"-"+str(instance))
-            var_group.append(var_with_instance)
-        comb_list = list(combinations(main_var,len(pruned_dataframe.index)))
+        comb_list = product(*pruned_dataframe.values)
 
-        shapley_list = []
-        for combos in comb_list:
-            count = 0
-            for i, varis in enumerate(combos):
-                if varis in var_group[i]:
-                    count += 1
-            if count == len(pruned_dataframe.index):
-                shapley_list.append(combos)
-
-        shapley_list = [list(i) for i in shapley_list]
-        name = "x"+str(index+1)
+        name = "x"+str(pos+1)
         segments = []
-        for segm in shapley_list:
-            segm1 = [ind_x+"-"+pruned_dataframe.columns.tolist()[0]] + segm
-            segm2 = [ind_x+"-"+pruned_dataframe.columns.tolist()[1]] + segm
-            segments.append([segm2,segm1])
+        for segm in comb_list:
+            base_segm1=list(segm)
+            base_segm2=list(segm)
+            base_segm1.insert(pos, ommitted_ins0)
+            base_segm2.insert(pos, ommitted_ins1)
+            segments.append([base_segm2,base_segm1])
+
         change_pairs_dict[name] = segments
+    return [change_pairs_dict, weight_computes]
 
-    return change_pairs_dict
-
-def shapley_values (dataframe, function):
+def shapley_values(dataframe, function, progress_report=False):
     """
     Calculates shapley values for all variables/independent xs
 
-    segm_difference() function converts input variables into a dictionary to attain
-    correct values to the input function. finish_func is the shunting_yard assessed
-    raw_func with values placed according to variable dictionary (a map between
-    dataframe and input function)
+    segm_difference() function combines the input function and values.
 
     Parameters:
+    ----------
         dataframe (pandas.core.frame.DataFrame) : Input dataframe
+        function (str) : Input function in text format (right hand side of equation)
+        progress_report (bool, optional) : If the number of variables are more
+        than or equal to 20 provide progress report, otherwise (default) false.
 
     Returns:
+    ----------
         calculated_shapley_for_samples (array) : Array with shapley value arrays
         of variables
+
+    Notes:
+    ----------
+        .. versionchanged:: 0.0.2
     """
+
     dataframe = frame_maker(dataframe)
-    sample = samples(dataframe)
+    samples_and_weight = samples(dataframe)
+    sample_return = samples_and_weight[0]
+    weight_return = samples_and_weight[1]
     calculated_shapley_for_samples = []
-    weights = []
 
-    def segm_difference(dataframe, sample_segment, function):
-        variable_dict = {}
-        # a variable dictionary to attain positions for xs and input variables
-        for i, name in enumerate(dataframe.index.tolist()):
-            if i != 0:
-                #disregard y which should be the first input variable in input dataframe
-                variable_dict[name] = ["x"+str(i)]
+    shunting_res = shunting_yard(function)
+    function_transformed = shunting_res[0]
+    var_transformed = shunting_res[1]
+    real_variable_pos = shunting_res[2]
 
-        for variable_instance_couple in sample_segment:
-            variable_dict[variable_instance_couple.split("-")[0]].append(dataframe.loc[variable_instance_couple.split("-")[0],variable_instance_couple.split("-")[1]])
+    iterable_length=2**(var_transformed-1)
 
-        inv_map = {value[0]: [key,value[1]] for key, value in variable_dict.items()}
+    def segm_difference(dataframe, sample_segment, function_transformed, var_transformed, real_variable_pos):
 
-        if shunting_yard(function)[1] == len(inv_map.keys()):
-            raw_func = shunting_yard(function)[0]
-            finish_func = []
+        if var_transformed == len(sample_return):
+            raw_func = function_transformed
             var_checker = 0
-            #put the values of variables in function according to the inverse of variable dictionary we created
-            for variable in raw_func:
-                if variable in inv_map.keys():
-                    var_checker += 1
-                    finish_func.append(inv_map[variable][1])
-                else:
-                    #constants and operators which are not in variable_dict
-                    finish_func.append(variable)
-            if var_checker != shunting_yard(function)[1]:
-                raise ValueError('Input and generated variables are not matched. Make sure the variable names in input function is "x + some integer".')
+            for pos,variable in enumerate(real_variable_pos):
+                raw_func[variable] = sample_segment[pos]
+                var_checker += 1
+
+            if var_checker != var_transformed:
+                raise ValueError('Input and generated variables are not matched. Make sure the variable names in input function is "x+some integer".')
             else:
-                return RPN_calc(finish_func)
+                return rpn_calc(raw_func)
         else:
             raise ValueError('Number of variables in function and data are not equal. Check both the input function and data.')
 
-    for variables in sample.keys():
-        raw_shapley = []
-        samples_to_weight=[pairs[0][1:] for pairs in sample[variables]]
-        # first of pairs for every pair [0] without the varible we calculate the contr. for [0][1:]
-        weights=weighter(len(dataframe.index.tolist()[1:]), samples_to_weight ,dataframe.columns.tolist()[1], owen=False)
+    if progress_report == True or iterable_length >= 1048576:
+        for variables in sample_return.keys():
+            iterable_process=0
+            raw_shapley = []
+            for combs,weights in zip(sample_return[variables],weight_return):
+                raw_shapley.append((segm_difference(dataframe, combs[0], function_transformed, var_transformed,real_variable_pos)-
+                                    segm_difference(dataframe, combs[1], function_transformed, var_transformed,real_variable_pos))*weights)
+                iterable_process += 1
+                if iterable_process % (iterable_length/8) == 0:
+                    print("\r", "processing " + variables+ ": " +str(round(iterable_process*100/iterable_length,1)) + '% completed', end="     ")
 
-        for combs in sample[variables]:
-            raw_shapley.append(segm_difference(dataframe, combs[0], function)-segm_difference(dataframe, combs[1], function))
+            calculated_shapley_for_samples.append(raw_shapley)
+        return calculated_shapley_for_samples
+    else:
+        for variables in sample_return.keys():
+            raw_shapley = []
+            for combs,weights in zip(sample_return[variables],weight_return):
+                raw_shapley.append((segm_difference(dataframe, combs[0], function_transformed, var_transformed,real_variable_pos)-
+                                    segm_difference(dataframe, combs[1], function_transformed, var_transformed,real_variable_pos))*weights)
 
-        calculated_shapley_for_samples.append(raw_shapley*weights)
+            calculated_shapley_for_samples.append(raw_shapley)
 
-    return calculated_shapley_for_samples
+        return calculated_shapley_for_samples
 
-def decomposition(dataframe, function, cagr=False):
+def decomposition(dataframe, function, cagr = False, print_progress = False):
     """
     Creates final output for shapley_change decomposition.
 
     frame_maker(), shapley_cahnge_calc() and cagr_calc() functions interact under shapley_change() function.
 
     Parameters:
+    ----------
         dataframe (pandas.core.frame.DataFrame) : Inital dataframe
         function (str) : Input function in text format (right hand side of equation)
         cagr (bool, optional) : Calculate cagr results, default false.
 
     Returns:
+    ----------
         df_fin (pandas.core.frame.DataFrame) : Final output for shapley_change
+
+    Notes:
+    ----------
+        .. versionchanged:: 0.0.2
     """
 
     dataframe = frame_maker(dataframe)
     dep_y = dataframe.index[0]
     warnings.warn("Check the dataframe as the dependent variable(y) should be the first in position i.e at index 0")
 
-    df_fin=dataframe.copy()
-    results = shapley_values(dataframe, function)
+    df_fin = dataframe.copy()
+    results = shapley_values(dataframe, function, progress_report = print_progress)
 
-    df_fin["dif"] = [x-y for x,y in zip(dataframe.loc[:,dataframe.columns[1]].tolist(),dataframe.loc[:,dataframe.columns[0]].tolist())]
-    df_fin["shapley"] = [df_fin.iloc[0,2]]+[result.sum() for result in results]
+    df_fin["dif"] = dataframe.iloc[:,1] - dataframe.iloc[:,0]
+    df_fin["shapley"] = [df_fin.iloc[0,2]]+[sum(result) for result in results]
     df_fin["contribution"] = [m/df_fin.loc[dep_y,"shapley"] for m in df_fin["shapley"].tolist()]
 
     if 0.9999 < df_fin["contribution"].sum()-1 < 1.0001:

@@ -10,11 +10,13 @@ def samples(dataframe):
     Create powerset of variable sets with omitted variables.
 
     Parameters:
+    ----------
         dataframe (pandas.core.frame.DataFrame) : Input dataframe
 
         force (bool, optional): Force to calculate for more than 10 variables
 
     Returns:
+    ----------
         (dict) : A dictionary of variable and powerset without it
     """
 
@@ -35,13 +37,17 @@ def shapley_decomposition(dataframe, force=False):
     Calculates shapley values and decomposes model r2 to individual contributions.
 
     Using shapley_owen_samples(), calculates differences between combinations
-    with and without variables. Weighted differences give shapley values for all variables.
+    with and without variables. Weighted differences give shapley values for all
+    variables.
 
     Parameters:
+    ----------
         dataframe (pandas.core.frame.DataFrame) : Input dataframe
 
     Returns:
-        (pandas.core.frame.DataFrame) : Decomposition according to shapley values
+    ----------
+        df_fin (pandas.core.frame.DataFrame) : Decomposition according to
+        shapley values
     """
 
     if type(dataframe) != pandas.core.frame.DataFrame:
@@ -73,18 +79,23 @@ def shapley_decomposition(dataframe, force=False):
 
 def owen_decomposition(dataframe, partitions, force=False):
     """
-    Calculates owen values and decomposes model r2 to individual and coalitional/group contributions.
+    Calculates owen values and decomposes model r2 to individual and
+    coalitional/group contributions.
 
-    Using input paritition structure, calculates individual owen values of variables and
-    aggragated contribution of coalitions/groups.
+    Using input paritition structure, calculates individual owen values of
+    variables and aggragated contribution of coalitions/groups.
 
     Parameters:
+    ----------
         dataframe (pandas.core.frame.DataFrame) : Input dataframe
 
-        partitions (list): List of paritions with variable names(in str format) showing group structure
+        partitions (list): List of paritions with variable names(in str format)
+        showing group structure
 
     Returns:
-        (list) : Final output for owen values and contribution of individuals [0] and owen values and contribution of groups [1]
+    ----------
+        (list) : Final output for owen values and contribution of individuals [0]
+        and owen values and contribution of groups [1]
     """
 
     if type(dataframe) != pandas.core.frame.DataFrame:
@@ -97,7 +108,7 @@ def owen_decomposition(dataframe, partitions, force=False):
     for i,partition in enumerate(partitions):
         all_partitions["b"+str(i+1)] = partition
         for subs in partition:
-            if type(subs) == list:
+            if isinstance(subs, list):
                 raise TypeError('One of your partitions list has a sublist. Provide variables like [["x1","x2"],["x3","x4","x5"],...,["xn"]]')
 
     m = list(all_partitions.keys())
