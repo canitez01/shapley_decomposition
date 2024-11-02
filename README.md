@@ -1,12 +1,12 @@
 # Shapley Decomposition
 
-This package consists of two applications of shapley values in descriptive analysis: 1) a generalized module for decomposing change over time, using shapley values[^1] (initially influenced by the World Bank's Job Structure tool[^2]) and 2) shapley and owen values based decomposition of R^2 (contribution of independent variables to a goodness of fit metric -R^2 in this case-) for linear regression models[^3].
+This package consists of two applications of shapley values in descriptive analysis: 1) a generalized module for decomposing change over instance, using shapley values[^1] (initially influenced by the World Bank's Job Structure tool[^2]) and 2) shapley and owen values based decomposition of R^2 (contribution of independent variables to a goodness of fit metric -R^2 in this case-) for linear regression models[^3].
 
 ## Notes
 
-Identities or functions with independently moving variables have independent contributions to the result as well. Therefore this module is better useful for functions or identities with dependently moving variables (though it works as well for the independent movements). It should be noted that being able to decompose the contribution of variables doesn't mean that the results are always clearly interpretable. Many features of variables like; scale, dependency mode, change dynamics (slow paced/fast paced, instant/lagged), etc. deserves attention when interpreting their individual contribution to the change or result.   
+Aim of this package is to help decompose the effect of changing unknowns/variables on two instances of an equation. It should be noted that being able to decompose the contribution of variables doesn't mean that the results are always clearly interpretable. Many features of variables like; scale, relation mode, change dynamics (slow paced/fast paced, instant/lagged), etc. deserves attention when interpreting their individual contribution to the change or result.   
 
-Both for the first and second application, the computation time increases exponentially as the number of variables increase. This is the result of powersets and so 2^n  calculations.
+Both for the first and second application, the computation time increases exponentially as the number of variables increase. This is the result of powersets and so 2^n calculations.
 
 Shapley value:
 
@@ -36,7 +36,7 @@ pip install shapley_decomposition
 
 ## Workings
 
-`shapley_decomposition.shapley_change` module consists of three functions: `samples()`, `shapley_values()` and `decomposition()`. `shapley_change.samples(dataframe)` returns powerset pairs that model uses. `shapley_change.shapley_values(dataframe, "your function")` returns weighted differences for each variable, sum of which gives the shapley value. `shapley_change.decomposition(dataframe, "your function")` returns decomposed total change by variable contributions. These functions of shapley_change module accepts either or both of the **data** and **function** inputs:
+`shapley_decomposition.shapley_change` module consists of three functions: `samples()`, `shapley_values()` and `decomposition()`. `shapley_change.samples(dataframe)` returns cartesian products of variable-instance couples. `shapley_change.shapley_values(dataframe, "your function")` returns weighted differences for each variable, sum of which gives the shapley value. `shapley_change.decomposition(dataframe, "your function")` returns decomposed total change by variable contributions. These functions of shapley_change module accepts either or both of the **data** and **function** inputs:
 
 1. The structure of input data is **important**. Module accepts pandas dataframes or 2d arrays:
   * If pandas dataframe is used as input, both the dependent variable and the independent variables should be presented in the given format (variable names as index and years as columns):
@@ -56,7 +56,7 @@ pip install shapley_decomposition
       [x2_value,x2_value]]
       ...
     ```
-2. Identity or function defines the relation between xs and y. Due to the characteristic of shapley decomposition the sum of xs' contributions should be equal to y, i.e. exact (with plus minus 0.0001 freedom in this module due to the residue of arithmetic operations), therefore no place for residuals, or an input relation that fails to create the given y will shoot a specific error. Function input is expected in text format. It is evaluated by a custom syntax parser (as the eval() function has its security risks). Expected format for the function input is the right hand side of the equation:
+2. Function defines the relation between xs and y. Due to the characteristic of shapley decomposition the sum of xs' contributions must be equal to y (with plus minus 0.0001 freedom in this module due to the residue of arithmetic operations), therefore no place for residuals. An input relation that fails to create the given y will shoot a specific error. Function input is expected in text format. It is evaluated by a custom parser (eval() function is avoided due to security risks). Expected format for the function input is the right hand side of the equation:
 
     * `"x1+x2*(x3/x4)**x5"`
     * `"(x1+x2)*x3+x4"`
