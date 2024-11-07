@@ -1,7 +1,5 @@
 import pandas
 import numpy
-from itertools import chain, combinations
-from copy import deepcopy
 import warnings
 from shapley_decomposition.shared_tools import flatten, frame_maker, powerset, weighter_r2, rsquared
 

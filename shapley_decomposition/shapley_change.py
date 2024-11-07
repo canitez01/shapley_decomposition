@@ -1,10 +1,7 @@
-import pandas
-import numpy
 from itertools import product
-from copy import deepcopy
 from math import factorial
 import warnings
-from shapley_decomposition.shared_tools import flatten, shunting_yard, rpn_calc, frame_maker, cagr_calc, s_sequence
+from shapley_decomposition.shared_tools import shunting_yard, rpn_calc, frame_maker, cagr_calc, s_sequence
 
 def samples(dataframe):
     """
